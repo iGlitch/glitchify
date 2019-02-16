@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.0-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2016%2C%202019-brightgreen.svg?style=flat-square"/> <a href="https://discordapp.com/invite/YBK3HRE"><img src="https://img.shields.io/badge/Discord-Channel-blue.svg?style=flat-square"></a>
+<img src="https://img.shields.io/badge/Version-1.0-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2016%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
