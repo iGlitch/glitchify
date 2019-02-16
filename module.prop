@@ -1,0 +1,8 @@
+id=Glitchify
+name=Glitchify
+version=v1.0
+versionCode=10
+author=Glitch
+description=A super tuning script made for the OG Pixel. Governor and kernel tweaks that aim to enhance power efficiency and while keeping performance.
+support=https://discordapp.com/invite/YBK3HRE
+minMagisk=1700
