@@ -243,28 +243,9 @@ done
 # A miscellaneous pm_async tweak that increases the amount of time (in milliseconds) before user processes & kernel threads are being frozen & "put to sleep";
 echo "25000" > /sys/power/pm_freeze_timeout
 
-# =========
-# Google Services Drain fix
-# =========
-su -c pm enable com.google.android.gms/.update.SystemUpdateActivity 
-su -c pm enable com.google.android.gms/.update.SystemUpdateService
-su -c pm enable com.google.android.gms/.update.SystemUpdateService$ActiveReceiver 
-su -c pm enable com.google.android.gms/.update.SystemUpdateService$Receiver 
-su -c pm enable com.google.android.gms/.update.SystemUpdateService$SecretCodeReceiver 
-su -c pm enable com.google.android.gsf/.update.SystemUpdateActivity 
-su -c pm enable com.google.android.gsf/.update.SystemUpdatePanoActivity 
-su -c pm enable com.google.android.gsf/.update.SystemUpdateService 
-su -c pm enable com.google.android.gsf/.update.SystemUpdateService$Receiver 
-su -c pm enable com.google.android.gsf/.update.SystemUpdateService$SecretCodeReceiver
-
-
-# Trim selected partitions at boot for a more than well-deserved and nice speed boost;
-fstrim /data;
-fstrim /cache;
-fstrim /system;
-
 # Push a semi-needed log to the internal storage with a "report" if the script could be executed or not;
 # Script log file location
+mkdir -p /storage/emulated/0/logs
 LOG_FILE=/storage/emulated/0/logs
 
 echo $(date) > /storage/emulated/0/logs/script.log
