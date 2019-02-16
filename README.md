@@ -1,8 +1,6 @@
 <h1 align="center">Glitchify</h1>
-<p align="center">making batteries great again for Google Pixel<strong></strong>
+<p align="center">Magisk module for making batteries great again on Google Pixel devices<strong></strong>
 </p>
-
-Glitchify aims to greatly enhance battery life while keeping the wonderful performance of Google Pixel devices.
 
 <p align="center">
 <img src="https://img.shields.io/badge/Version-1.0-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2016%2C%202019-brightgreen.svg?style=flat-square"/> <a href="https://discordapp.com/invite/YBK3HRE"><img src="https://img.shields.io/badge/Discord-Channel-blue.svg?style=flat-square"></a>
@@ -31,18 +29,17 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - prop tweaks (Doze, single user, power saving, secureif, memory, etc)
 - and more!
 
-## Optional Features
-- Installation of cleaner (includes SQLite3 binary)
--- zipaligns apks every 60 hours
--- sql vacuum and reindex every 60 hours
--- junk cleaner - removes cache, txt, logs from places they don't need to be every 60 hours. (fb messenger images may become blank)
+## Optional Installation of cleaner (includes SQLite3 binary)
+- zipaligns apks every 60 hours
+- sql vacuum and reindex every 60 hours
+- junk cleaner - removes cache, txt, logs from places they don't need to be every 60 hours. (fb messenger images may become blank)
 
 ## Requirements
 - [Magisk v17+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
 - [Busybox](https://forum.xda-developers.com/attachment.php?attachmentid=4654214&d=1543441627)
 - One of the compatible devices from the compatibility list.
 
-## Compatibility
+## Phone Compatibility
 ```
 Google Pixel (sailfish)
 Google Pixel XL (marlin)
