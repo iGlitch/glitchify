@@ -116,5 +116,6 @@ if $FUNCTION; then
     ui_print " "
 else
     ui_print "NOT installing extra tweaks..."
+    rm -rf $INSTALLER/system
     ui_print " "
 fi;
