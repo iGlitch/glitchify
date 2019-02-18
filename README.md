@@ -7,10 +7,10 @@
 </p>
 
 ## What is Glitchify ?
-Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increases battery life while keeping the wonderful performance of the Google Pixel Android phones.  I (Glitch) only own a Google Pixel (sailfish) phone, as such, this Magisk module is strictly made for this device, and I do not know or support using this on other phones.
+Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increases battery life while keeping the wonderful performance of the Google Pixel Android phones.  I (Glitch) only own a Google Pixel (sailfish) phone, and I do not know or support using this on phones outside of the Pixel series.
 
 ## Features
-- Sets *schedutil* CPU governer by default
+- Sets *schedutil* CPU governer by default (if it exists in the kernel)
 - frequency tweaks for good battery without extreme sacrifice of performance
 - fsync at boot
 - Up to date Unity template (as of the date of this posting)
@@ -39,12 +39,22 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - [Busybox](https://forum.xda-developers.com/attachment.php?attachmentid=4654214&d=1543441627)
 - One of the compatible devices from the compatibility list.
 
-## Phone Compatibility
+## Device Compatibility
 ```
 Google Pixel (sailfish)
 Google Pixel XL (marlin)
+Google Pixel 2 (walleye)
+Google Pixel 2 XL (taimen)
+Google Pixel 3 (blueline)
+Google Pixel 3 XL (crosshatch)
 ```
 ## Changelog
+### v1.1 (2019/02/17)
+- Add initial support for Pixel 2 and 3
+- Remove SQL tweaks if cleaner is not necessary
+- remove the single user mod which breaks a few things
+- cleanup
+
 ### v1.0 (2019/02/17)
 - Initial release
 
@@ -58,7 +68,7 @@ Glitchify modifies things from the `kernel` level. **This is only tested on Goog
 Thanks goes to those wonderful people
 - [Unity template](https://github.com/Zackptg5/Unity) @ahrion & @Zackptg5 
 - [Magisk](https://github.com/topjohnwu/Magisk) @topjohnwu
-- xFireFly93, crok, gloeyisk, simonsmh, korom42
+- xFireFly93 (for BM) gloeyisk, simonsmh, korom42
 - Authors of kernels with schedutil additions.
 
 <p align="center">

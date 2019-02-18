@@ -69,20 +69,36 @@ chmod 755 $KEYCHECK
 #set device variable
 device="$(getprop ro.product.device)"
 if [ $device == "sailfish" ] || [ $device == "marlin" ]; then
-	ui_print " "; ui_print "Excellent, you are using a Pixel... you CAN follow directions!"
     kernelver=$(uname -a)
-    #check for custom kernel and install its boot tweaks
 	case "$kernelver" in  *KingKernel* | *Kirisakura* | *exNoShadez*)
-		  ui_print " "; ui_print "You're using a compatible kernel, alright! Installing..."
+		  ui_print " "; ui_print "You are using a compatible kernel and on Pixel, alright! Installing..."
 		  cat $INSTALLER/common/pixel/glitchify.sh >> $INSTALLER/common/service.sh
+		  rm -rf $INSTALLER/common/pixel
+		  rm -rf $INSTALLER/common/pixel2
+          rm -rf $INSTALLER/common/pixel3
 		  ;;
       *)
-  		  ui_print " "; ui_print "Applying modified version of BM..."
+  		  ui_print " "; ui_print "You are using a Pixel, alright! Installing..."
 		  cat $INSTALLER/common/pixel/bm.sh >> $INSTALLER/common/service.sh
+		  rm -rf $INSTALLER/common/pixel
+		  rm -rf $INSTALLER/common/pixel2
+          rm -rf $INSTALLER/common/pixel3
 		  ;;
 	esac
+elif [ $device == "walleye" ] || [ $device == "taimen" ] ; then
+    ui_print "You are using a Pixel 2, alright! Installing..."
+	cat $INSTALLER/common/pixel2/bm.sh >> $INSTALLER/common/service.sh
+	rm -rf $INSTALLER/common/pixel
+	rm -rf $INSTALLER/common/pixel2
+    rm -rf $INSTALLER/common/pixel3
+elif [ $device == "crosshatch" ] || [ $device == "blueline" ] ; then
+    ui_print "You are using a Pixel 3, alright! Installing..."
+    cat $INSTALLER/common/pixel3/bm.sh >> $INSTALLER/common/service.sh
+    rm -rf $INSTALLER/common/pixel
+    rm -rf $INSTALLER/common/pixel2
+    rm -rf $INSTALLER/common/pixel3
 else
-	ui_print "You are not on an OG Pixel device, Don't try to cheat! Aborting..."
+	ui_print "You are not on a Google Pixel series device! Aborting because you are trying to cheat..."
 	exit
 fi;
 
@@ -98,10 +114,10 @@ else
     ui_print "**  Press Vol DOWN **"
     $FUNCTION "DOWN"
 fi
-ui_print "There is an extra cleaner in Glitchify"
-ui_print "There are Zipalign and SQlite tweaks as well as a junk cleaner"
+ui_print "There is an extra cleaner for Glitchify"
+ui_print "Zipalign and SQlite tweaks as well as a junk cleaner"
 ui_print "These can enhance battery life and make the device run smoother"
-ui_print "But some apps may stop functioning properly"
+ui_print "Some apps may stop functioning properly"
 ui_print "Do you want to install the cleaner?"
 ui_print " "
 ui_print "   Vol(+) = Yes"
