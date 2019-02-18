@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.1-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2016%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.1-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2018%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -49,7 +49,7 @@ Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
 ```
 ## Changelog
-### v1.1 (2019/02/17)
+### v1.1 (2019/02/18)
 - Add initial support for Pixel 2 and 3
 - Remove SQL tweaks if cleaner is skipped
 - remove the single user mod which breaks a few things
