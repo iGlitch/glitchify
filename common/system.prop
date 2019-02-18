@@ -4,10 +4,6 @@ persist.sys.usb.config=none
 sys.usb.config=none
 sys.usb.configfs=1
 
-#disable multi user
-fw.max_users=1
-fw.show_multiuse=0
-
 # Enable power saving mode
 ro.config.hw_power_saving=true
 # persist.radio.add_power_save=1
