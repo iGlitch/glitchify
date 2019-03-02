@@ -16,6 +16,11 @@ busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /sys;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /data;
 busybox mount -o remount,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /system;
 
+# Remove Find My Device and other Google stuff for enabling GMS Doze;
+pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+pm disable com.google.android.gms/.update.SystemUpdateActivity 
+pm disable com.google.android.gms/.update.SystemUpdateService
+
 #Enable msm_thermal and core_control
 echo "Y" > /sys/module/msm_thermal/parameters/enabled
 echo "1" > /sys/module/msm_thermal/core_control/enabled
