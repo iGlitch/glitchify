@@ -1,18 +1,25 @@
 #!/system/bin/sh
 
 #
-# BM 9.6
+# BM 9.8
 #
 
-# Pause script execution a little for Magisk Boot Service;
-sleep 15;
+sleep 30;
 
-# Mounting tweak for better overall partition performance;
-busybox mount -o remount,nosuid,nodev,commit=90,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
+# Filesystem tweaks for better system performance;
+busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,commit=90,noatime,data=writeback,nodiratime,barrier=0,noauto_da_alloc,relatime -t auto /sys;
+busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,barrier=0,noauto_da_alloc,relatime -t auto /sys;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /data;
-busybox mount -o remount,nosuid,nodev,commit=90,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
+busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
+
+# Remove Find My Device for enabling GMS Doze;
+pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+
+# Enable this custom Doze profile for better battery life savings, and less amount of idle drain, when the screen is turned off and our devices is fully supposed to be sleeping;
+
+# Doze battery life profile;
+settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
 
 # Tweak the various Flag Tuners for achieving slightly improved multitasking as well as overall better system performance and reduced power consumption;
 
@@ -32,8 +39,8 @@ echo "0-3" > /dev/cpuset/foreground/cpus
 echo "0-3" > /dev/cpuset/kernel/cpus
 
 # Disable that Stune prefers idling cores for saving some extra potential battery percents at the expense of the UX;
-echo "0" > /dev/stune/foreground/schedtune.prefer_idle
-echo "0" > /dev/stune/top-app/schedtune.prefer_idle
+# echo "0" > /dev/stune/foreground/schedtune.prefer_idle
+# echo "0" > /dev/stune/top-app/schedtune.prefer_idle
 
 # Disable exception-trace and reduce some overhead that is caused by a certain amount and percent of kernel logging, in case your kernel of choice have it enabled;
 echo "0" > /proc/sys/debug/exception-trace
@@ -42,7 +49,7 @@ echo "0" > /proc/sys/debug/exception-trace
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
-# Use my own semi-customized kernel entropy hook config so the urandom generator is fully kept at bay;
+# Use my own semi-customized kernel entropy hook config so the random generator is fully kept at bay;
 echo "128" > /proc/sys/kernel/random/read_wakeup_threshold
 echo "96" > /proc/sys/kernel/random/urandom_min_reseed_secs
 echo "2560" > /proc/sys/kernel/random/write_wakeup_threshold
@@ -77,7 +84,7 @@ echo "0" > /proc/sys/net/ipv4/tcp_slow_start_after_idle
 echo "48" > /proc/sys/net/ipv6/ip6frag_time
 
 # Virtual Memory tweaks & enhancements for a massively improved balance between performance and battery life;
-echo "0" > /proc/sys/vm/compact_unevictable_allowed
+echo "1" > /proc/sys/vm/compact_unevictable_allowed
 echo "3" > /proc/sys/vm/dirty_background_ratio
 echo "500" > /proc/sys/vm/dirty_expire_centisecs
 echo "30" > /proc/sys/vm/dirty_ratio
@@ -127,14 +134,22 @@ done
 # Disable gesture based vibration because it is honestly not even worth having enabled at all;
 echo "0" > /sys/android_touch/vib_strength
 
-# Enable CFQ group idle mode for improved scheduling effectivness by merging the IO queues in a "unified group" instead of treating them as individual IO based queues;
+# Either disable or enable CFQ group idle mode for improved scheduling effectivness by merging all of the single IO queues in a "unified group" instead of treating them as fully individual, and standalone, IO based queues;
+
+# Group_idle stock setting;
 for i in /sys/block/*/queue/iosched; do
-  echo "1" > $i/group_idle;
+#  echo "0" > $i/group_idle;
+done;
+
+# Group_idle customized setting;
+for i in /sys/block/*/queue/iosched; do
+    echo "8" > $i/group_idle;
 done;
 
 # Wide block based tuning for reduced lag and less possible amount of general IO scheduling based overhead (Thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You really rock, dude!);
 for i in /sys/block/*/queue; do
   echo "0" > $i/add_random;
+  echo "0" > $i/io_poll;
   echo "0" > $i/iostats;
   echo "0" > $i/nomerges;
   echo "32" > $i/nr_requests;
@@ -193,16 +208,27 @@ done;
 
 # Little Cluster;
 echo "18500" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us
-# echo "1" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/iowait_boost_enable
 echo "775" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
 
 # BIG Cluster;
 echo "18500" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/down_rate_limit_us
-# echo "1" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/iowait_boost_enable
 echo "775" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/up_rate_limit_us
+
+# In case that you instead want to boost / increase strict raw performance, then enable this fully performance oriented Schedutil profile by removing the hashtags in front of the echo commands and set a # in front of the non-hashtagged syntax commands in the battery life optimized Schedutil profile in the section above;
+
+# Little Cluster;
+# echo "22555" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us
+# echo "1" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/iowait_boost_enable
+# echo "444" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
+
+# BIG Cluster;
+# echo "22555" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/down_rate_limit_us
+# echo "1" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/iowait_boost_enable
+# echo "444" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/up_rate_limit_us
 
 # Tweak the kernel task scheduler for improved overall system performance and user interface responsivness during all kind of possible workload based scenarios;
 echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
+echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features
 echo "NO_TTWU_QUEUE" > /sys/kernel/debug/sched_features
 echo "NO_RT_RUNTIME_SHARE" > /sys/kernel/debug/sched_features
 
@@ -225,6 +251,7 @@ echo "Y" > /sys/module/bluetooth/parameters/disable_esco
 # Slightly tweak Sultans custom CPU input boosting driver into delivering even more UI smoothness as well as overall system responsivness whenever it is possible;
 echo "128" > /sys/module/cpu_input_boost/parameters/input_boost_duration
 echo "422400" > /sys/module/cpu_input_boost/parameters/input_boost_freq_hp
+# echo "748800" > /sys/module/cpu_input_boost/parameters/input_boost_freq_lp
 echo "825600" > /sys/module/cpu_input_boost/parameters/input_boost_freq_lp
 
 # Turn off even more additional useless kernel debuggers, masks and modules that is not really needed & used at all;
@@ -251,16 +278,8 @@ echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
 # A miscellaneous pm_async tweak that increases the amount of time (in milliseconds) before user processes & kernel threads are being frozen & "put to sleep";
 echo "25000" > /sys/power/pm_freeze_timeout
 
-# Trim selected partitions at boot for a more than well-deserved and nice speed boost;
-#fstrim /data;
-#fstrim /cache;
-#fstrim /system;
-
-# Push a semi-needed log to the internal storage with a "report" if the script could be executed or not;
-
 # Script log file location
 LOG_FILE=/storage/emulated/0/logs
-
 echo $(date) > /storage/emulated/0/logs/glitchify.log
 if [ $? -eq 0 ]
 then
