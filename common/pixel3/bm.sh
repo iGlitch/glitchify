@@ -1,10 +1,6 @@
 #!/system/bin/sh
 
-#
 # BM 1.5
-#
-
-sleep 25;
 
 # Filesystem tweaks for better system performance;
 busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
@@ -19,18 +15,6 @@ pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDevice
 
 # Doze battery life profile;
 settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
-
-# Tweak the various Flag Tuners for achieving slightly improved multitasking as well as overall better system performance and reduced power consumption;
-
-setprop MIN_HIDDEN_APPS false
-setprop ACTIVITY_INACTIVE_RESET_TIME false
-setprop MIN_RECENT_TASKS false
-setprop PROC_START_TIMEOUT false
-setprop CPU_MIN_CHECK_DURATION false
-setprop GC_TIMEOUT false
-setprop SERVICE_TIMEOUT false
-setprop MIN_CRASH_INTERVAL false
-setprop ENFORCE_PROCESS_LIMIT false
 
 # Modify and enhance the default CPUSet Google set-up / values for a slight and critically needed battery life bump;
 echo "0-3" > /dev/cpuset/background/cpus
@@ -252,6 +236,4 @@ else
   exit 1
 fi
   
-# Wait..
-# Done!
-#
+# done
