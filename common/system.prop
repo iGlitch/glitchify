@@ -1,13 +1,14 @@
 # This file will be read by resetprop
+
 #secureif
 persist.sys.usb.config=none
 sys.usb.config=none
 sys.usb.configfs=1
 
 # Enable power saving mode
-ro.config.hw_power_saving=true
+# ro.config.hw_power_saving=true
 # persist.radio.add_power_save=1
-power.saving.mode=1
+# power.saving.mode=1
 pm.sleep_mode=1
 ro.ril.disable.power.collapse=0
 ro.ril.sensor.sleep.control=1
@@ -15,6 +16,27 @@ doze.pulse.sigmotion=0
 doze.shake.acc.threshold=10
 doze.vibrate.sigmotion=0
 debug.doze.component=0
+doze.pulse.notifications=true
+doze.use.accelerometer=0
+doze.pickup.vibration.threshold=2000
+doze.pulse.brightness=5
+doze.pulse.delay.in=200
+doze.pulse.duration.in=1000
+doze.pulse.duration.out=500
+doze.pulse.duration.visible=2500
+doze.pulse.proxcheck=0
+doze.pulse.schedule=1s,10s,30s,60s,120s
+doze.pulse.schedule.resets=3
+
+MIN_HIDDEN_APPS=false
+ACTIVITY_INACTIVE_RESET_TIME=false
+MIN_RECENT_TASKS=false
+PROC_START_TIMEOUT=false
+CPU_MIN_CHECK_DURATION=false
+GC_TIMEOUT=false
+SERVICE_TIMEOUT=false
+MIN_CRASH_INTERVAL=false
+ENFORCE_PROCESS_LIMIT=false
 
 #Volume Steps Increaser
 #ro.config.vc_call_vol_steps=10
@@ -37,13 +59,15 @@ wifi.supplicant_scan_interval=300
 
 # Disable IMS debug logs
 persist.ims.disableDebugLogs=1 
+
 # Disable quality control
 # persist.radio.oem_socket=false
 
 # Disable fast dormancy
-#ro.fast.dormancy=1
-#ro.config.hw_fast_dormancy=1
-#ro.ril.fast.dormancy.rule=1
+ro.fast.dormancy=1
+ro.config.hw_fast_dormancy=1
+ro.ril.fast.dormancy.rule=1
+ro.semc.enable.fast_dormancy=true
 
 # Disable stats logging & monitoring
 debug.atrace.tags.enableflags=0
