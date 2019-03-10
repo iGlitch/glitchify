@@ -1,10 +1,6 @@
 #!/system/bin/sh
 
-#
-# BM 9.8
-#
-
-sleep 30;
+# BM 10.1
 
 # Filesystem tweaks for better system performance;
 busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
@@ -14,29 +10,17 @@ busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime,barrier=0,noau
 busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Remove Find My Device for enabling GMS Doze;
-pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+# pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
 
 # Enable this custom Doze profile for better battery life savings, and less amount of idle drain, when the screen is turned off and our devices is fully supposed to be sleeping;
 
 # Doze battery life profile;
 settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
 
-# Tweak the various Flag Tuners for achieving slightly improved multitasking as well as overall better system performance and reduced power consumption;
-
-setprop MIN_HIDDEN_APPS false
-setprop ACTIVITY_INACTIVE_RESET_TIME false
-setprop MIN_RECENT_TASKS false
-setprop PROC_START_TIMEOUT false
-setprop CPU_MIN_CHECK_DURATION false
-setprop GC_TIMEOUT false
-setprop SERVICE_TIMEOUT false
-setprop MIN_CRASH_INTERVAL false
-setprop ENFORCE_PROCESS_LIMIT false
-
 # Modify and enhance the default CPUSet Google set-up / values for a slight and critically needed battery life bump;
-echo "0-3" > /dev/cpuset/background/cpus
-echo "0-3" > /dev/cpuset/foreground/cpus
-echo "0-3" > /dev/cpuset/kernel/cpus
+echo "0-3,6-7" > /dev/cpuset/foreground/cpus
+echo "0" > /dev/cpuset/kernel/cpus
+echo "0-5" > /dev/cpuset/top-app/cpus
 
 # Disable that Stune prefers idling cores for saving some extra potential battery percents at the expense of the UX;
 # echo "0" > /dev/stune/foreground/schedtune.prefer_idle
@@ -49,16 +33,19 @@ echo "0" > /proc/sys/debug/exception-trace
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
-# Use my own semi-customized kernel entropy hook config so the random generator is fully kept at bay;
-echo "128" > /proc/sys/kernel/random/read_wakeup_threshold
-echo "96" > /proc/sys/kernel/random/urandom_min_reseed_secs
-echo "2560" > /proc/sys/kernel/random/write_wakeup_threshold
+# Use & enable Maverick Jester's (@ XDA-Developers) customized random generator entropy configuration;
+echo "192" > /proc/sys/kernel/random/read_wakeup_threshold
+echo "90" > /proc/sys/kernel/random/urandom_min_reseed_secs
+echo "1792" > /proc/sys/kernel/random/write_wakeup_threshold
 
 # Disable kernel compat based logging once and for all;
 echo "0" > /proc/sys/kernel/compat-log
 
 # Fully disable kernel printk console log spamming directly for less amount of useless wakeups (reduces overhead);
 echo "0 0 0 0" > /proc/sys/kernel/printk
+
+# Enable sched boost for faster launching of applications;
+echo "1" > /proc/sys/kernel/sched_boost
 
 # A few sched tweaks for improved system responsivness;
 echo "15000000" > /proc/sys/kernel/sched_latency_ns
@@ -134,28 +121,28 @@ done
 # Disable gesture based vibration because it is honestly not even worth having enabled at all;
 echo "0" > /sys/android_touch/vib_strength
 
-# Either disable or enable CFQ group idle mode for improved scheduling effectivness by merging all of the single IO queues in a "unified group" instead of treating them as fully individual, and standalone, IO based queues;
+# Either enable (or disable) CFQ group idling with the goal of achieving higher IO throughput by forcing idling at the CFQ group level, instead at the queue level, and thereafter dispatching requests from multiple queues at the same time for generating the higher level of IO throughput;
 
 # Group_idle stock setting;
 for i in /sys/block/*/queue/iosched; do
-#  echo "0" > $i/group_idle;
+   echo "0" > $i/group_idle;
 done;
 
 # Group_idle customized setting;
 for i in /sys/block/*/queue/iosched; do
-    echo "8" > $i/group_idle;
+#  echo "8" > $i/group_idle;
 done;
 
 # Wide block based tuning for reduced lag and less possible amount of general IO scheduling based overhead (Thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You really rock, dude!);
 for i in /sys/block/*/queue; do
   echo "0" > $i/add_random;
-  echo "0" > $i/io_poll;
   echo "0" > $i/iostats;
   echo "0" > $i/nomerges;
   echo "32" > $i/nr_requests;
   echo "128" > $i/read_ahead_kb;
   echo "0" > $i/rotational;
   echo "1" > $i/rq_affinity;
+  echo "cfq" > $i/scheduler;
 done;
 
 # Shift to and instead use the originally Samsung forked simple_ondemand GPU governor for gaining a better peak balance between battery life and performance for daily usage;
@@ -164,21 +151,11 @@ done;
 # Revert to and use the stock msm-adreno-tz GPU governor if wished;
 # echo "msm-adreno-tz" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/governor
 
-# Underclock and strictly cap the maximum allowed GPU frequency just a little with a few steps for overall power consumption and thermal pressure based reasons;
-# echo "515000000" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/max_freq
-
-# See my note above regarding the max GPU freq cap;
-# echo "515000000" > /sys/class/devfreq/soc:qcom,kgsl-busmon/max_freq
-
 # Boost GPU rendering by tuning the Adreno 540 GPU into delivering better graphical rendering, with respect to power consumption, by using this performance oriented mode;
 echo "0" > /sys/class/kgsl/kgsl-3d0/bus_split
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_rail_on
-
-# See my previous notes regarding the limitation & capping of the maximal allowed GPU frequency;
-# echo "515" > /sys/class/kgsl/kgsl-3d0/max_clock_mhz
-# echo "515000000" > /sys/class/kgsl/kgsl-3d0/max_gpuclk
 
 # Disable GPU frequency based throttling;
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
@@ -192,7 +169,7 @@ echo "170" > /sys/class/leds/led:switch_1/max_brightness
 echo "170" > /sys/class/leds/red/max_brightness
 
 # Enable a tuned Boeffla wakelock blocker at boot for both better active & idle battery life;
-echo "wlan_pno_wl;wlan_ipa;wcnss_filter_lock;[timerfd];hal_bluetooth_lock;IPA_WS;sensor_ind;wlan;netmgr_wl;qcom_rx_wakelock;wlan_wow_wl;wlan_extscan_wl;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+echo "wlan_pno_wl;wlan_ipa;wcnss_filter_lock;[timerfd];hal_bluetooth_lock;IPA_WS;sensor_ind;wlan;netmgr_wl;qcom_rx_wakelock;SensorService_wakelock;tftp_server_wakelock;wlan_wow_wl;wlan_extscan_wl;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
 
 # Tweak and decrease tx_queue_len default stock value(s) for less amount of generated bufferbloat and for gaining slightly faster network speed and performance;
 for i in $(find /sys/class/net -type l); do
@@ -204,7 +181,7 @@ done;
 # echo "5" > /sys/devices/platform/kcal_ctrl.0/kcal_min
 # echo "257" > /sys/devices/platform/kcal_ctrl.0/kcal_val
 
-# Optimize and lower both the battery drain and overall power consumption that is caused by the Schedutil governor by biasing it to use slightly lower frequency steps, but do this without sacrificing performance or overall UI fluidity. See this as a balanced in-kernel power save mode, but without any notable traces of the "semi-typical" smoothness regressions;
+# Adjust and lower both the battery drain and overall power consumption that is caused by the Schedutil governor by biasing it to use slightly lower frequency steps, but do this without sacrificing performance or overall UI fluidity. See this as a balanced in-kernel power save mode, but without any traces of the "semi-typical" smoothness regressions;
 
 # Little Cluster;
 echo "18500" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us
@@ -217,12 +194,12 @@ echo "775" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/up_rate_limit_us
 # In case that you instead want to boost / increase strict raw performance, then enable this fully performance oriented Schedutil profile by removing the hashtags in front of the echo commands and set a # in front of the non-hashtagged syntax commands in the battery life optimized Schedutil profile in the section above;
 
 # Little Cluster;
-# echo "22555" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us
+# echo "22444" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/down_rate_limit_us
 # echo "1" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/iowait_boost_enable
 # echo "444" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
 
 # BIG Cluster;
-# echo "22555" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/down_rate_limit_us
+# echo "22444" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/down_rate_limit_us
 # echo "1" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/iowait_boost_enable
 # echo "444" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/up_rate_limit_us
 
@@ -240,9 +217,6 @@ echo "1" > /sys/kernel/fast_charge/force_fast_charge
 
 # See my short, but explained, note a very few steps up regarding the usage of stock msm-adreno-tz GPU governor;
 # echo "msm-adreno-tz" > /sys/kernel/gpu/gpu_governor
-
-# See my previous notes (again) regarding the limitation & capping of the maximal allowed GPU frequency;
-# echo "515" > /sys/kernel/gpu/gpu_max_clock
 
 # Turn off a few additional kernel debuggers and what not for gaining a slight boost in both performance and battery life;
 echo "Y" > /sys/module/bluetooth/parameters/disable_ertm
@@ -289,7 +263,5 @@ else
   echo "Glitchify was unsuccessful... try again!" >> /storage/emulated/0/logs/glitchify.log
   exit 1
 fi
-  
-# Wait..
-# Done!
-#
+
+#done
