@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.1-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Feb%2018%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.2-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Mar%2013%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -49,6 +49,12 @@ Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
 ```
 ## Changelog
+### v1.2 (2019/02/18)
+- Moved some setprops into system.prop
+- Updated BM for all Pixel devices. 
+- Updated Doze, less kernel logging.
+- More cleanup and bug fixes.
+
 ### v1.1 (2019/02/18)
 - Add initial support for Pixel 2 and 3
 - Remove SQL tweaks if cleaner is skipped
