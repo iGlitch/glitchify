@@ -9,15 +9,15 @@ if [ -e /system/etc/sysctl.conf ]; then
   mount -o remount,ro /system;
 fi;
 
-# Mounting tweak for better overall partition performance;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /sys;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /data;
-busybox mount -o remount,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /system;
+# Mounting FS tweak for better overall partition performance;
+busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime -t auto /proc;
+busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,barrier=0,noauto_da_alloc,relatime -t auto /sys;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /data;
+busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Remove Find My Device and other Google stuff for enabling GMS Doze;
-pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+#pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
 pm disable com.google.android.gms/.update.SystemUpdateActivity 
 pm disable com.google.android.gms/.update.SystemUpdateService
 
@@ -72,15 +72,7 @@ echo "777" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/up_rate_limit_us
 #echo "1" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/hispeed_load
 echo "0" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/pl
 
-sleep 15;
-
-#i/o sched cfq
-echo "cfq" > /sys/block/sda/queue/scheduler
-echo "cfq" > /sys/block/sdb/queue/scheduler
-echo "cfq" > /sys/block/sdc/queue/scheduler
-echo "cfq" > /sys/block/sdd/queue/scheduler
-echo "cfq" > /sys/block/sde/queue/scheduler
-echo "cfq" > /sys/block/sdf/queue/scheduler
+sleep 5;
 
 # Disable exception-trace and reduce some overhead that is caused by a certain amount and percent of kernel logging, in case your kernel of choice have it enabled;
 echo "0" > /proc/sys/debug/exception-trace
@@ -90,15 +82,18 @@ echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
 # A couple of minor kernel entropy tweaks & enhancements for a slight UI responsivness boost;
-echo "128" > /proc/sys/kernel/random/read_wakeup_threshold
-echo "96" > /proc/sys/kernel/random/urandom_min_reseed_secs
-echo "2560" > /proc/sys/kernel/random/write_wakeup_threshold
+echo "192" > /proc/sys/kernel/random/read_wakeup_threshold
+echo "90" > /proc/sys/kernel/random/urandom_min_reseed_secs
+echo "1792" > /proc/sys/kernel/random/write_wakeup_threshold
 
 # Kernel based tweaks that reduces the amount of wasted CPU cycles to maximum and gives back a huge amount of needed performance to both the system and the user;
 echo "0" > /proc/sys/kernel/compat-log
 echo "0" > /proc/sys/kernel/panic
 echo "0" > /proc/sys/kernel/panic_on_oops
 echo "0" > /proc/sys/kernel/perf_cpu_time_max_percent
+
+# Fully disable kernel printk console log spamming directly for less amount of useless wakeups (reduces overhead);
+echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Increase how much CPU bandwidth (CPU time) realtime scheduling processes are given for slightly improved system stability and minimized chance of system freezes & lockups;
 echo "955000" > /proc/sys/kernel/sched_rt_runtime_us
@@ -168,6 +163,9 @@ echo "N" > /sys/module/sit/parameters/log_ecn_error
 echo "0" > /sys/module/smp2p/parameters/debug_mask
 echo "0" > /sys/module/usb_bam/parameters/enable_event_log
 echo "Y" > /sys/module/printk/parameters/console_suspend
+echo "N" > /sys/module/printk/parameters/cpu
+echo "N" > /sys/module/printk/parameters/pid
+echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
 
 if [ -e /sys/module/logger/parameters/log_mode ]; then
  echo "2" > /sys/module/logger/parameters/log_mode
@@ -205,7 +203,7 @@ for i in /sys/devices/virtual/block/*/queue/iosched; do
 done;
 
 # Disable gesture based vibration because it is honestly not even worth having enabled at all;
-echo "5" > /sys/android_touch/vib_strength
+echo "0" > /sys/android_touch/vib_strength
 
 # Wide block based tuning for reduced lag and less possible amount of general IO scheduling based overhead
 for i in /sys/devices/virtual/block/*/queue; do
@@ -218,36 +216,33 @@ for i in /sys/devices/virtual/block/*/queue; do
   #echo "128" > $i/read_ahead_kb;
   echo "0" > $i/rotational;
   echo "1" > $i/rq_affinity;
-  echo "write through" > $i/write_cache;
+  #echo "write through" > $i/write_cache;
 done;
 
-# Revert to and use the stock msm-adreno-tz GPU governor if wished;
-#echo "msm-adreno-tz" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/governor
-
-# Decrease the ideal target GPU frequency down to 133Mhz for slightly increased power efficiency and less battery drainage;
-#echo "133000000" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/target_freq
-
 # Optimize the Adreno 530 GPU into delivering better overall graphical rendering performance, but do it with "respect" to battery life as well as power consumption as far as possible with less amount of possible tradeoffs; (Commented out because adrenoidler/boost is in the kernel already)
-#echo "0" > /sys/class/kgsl/kgsl-3d0/bus_split
-#echo "72" > /sys/class/kgsl/kgsl-3d0/deep_nap_timer
-#echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
-#echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
-#echo "1" > /sys/class/kgsl/kgsl-3d0/force_rail_on
+echo "0" > /sys/class/kgsl/kgsl-3d0/bus_split
+echo "72" > /sys/class/kgsl/kgsl-3d0/deep_nap_timer
+echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
+echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
+echo "1" > /sys/class/kgsl/kgsl-3d0/force_rail_on
 #echo "Y" > /sys/module/adreno_idler/parameters/adreno_idler_active
 echo "7500" > /sys/module/adreno_idler/parameters/adreno_idler_idleworkload
 #echo "40" > /sys/module/adreno_idler/parameters/adreno_idler_downdifferential
 #echo "24" > /sys/module/adreno_idler/parameters/adreno_idler_idlewait
+
+# Disable GPU frequency based throttling;
+echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
 
 #1028 readahead KB for sde and sdf io scheds
 #echo "1028" > /sys/block/sde/queue/read_ahead_kb
 #echo "1028" > /sys/block/sdf/queue/read_ahead_kb
 
 # Decrease both battery as well as power consumption that is being caused by the screen by lowering how much light the pixels, the built-in LED switches and the LCD backlight module is releasing & "kicking out" by carefully tuning / adjusting their maximum values a little bit to the balanced overall range of their respective spectrums;
-echo "170" > /sys/class/leds/blue/max_brightness
-echo "170" > /sys/class/leds/green/max_brightness
-echo "170" > /sys/class/leds/lcd-backlight/max_brightness
-echo "170" > /sys/class/leds/led:switch/max_brightness
-echo "170" > /sys/class/leds/red/max_brightness
+echo "175" > /sys/class/leds/blue/max_brightness
+echo "175" > /sys/class/leds/green/max_brightness
+echo "175" > /sys/class/leds/lcd-backlight/max_brightness
+echo "175" > /sys/class/leds/led:switch/max_brightness
+echo "175" > /sys/class/leds/red/max_brightness
 
 if [ -e "/sys/module/xhci_hcd/parameters/wl_divide" ]; then
 write /sys/module/xhci_hcd/parameters/wl_divide "N"
@@ -259,6 +254,12 @@ echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_time
 for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
+
+# Tweak the kernel task scheduler for improved overall system performance and user interface responsivness during all kind of possible workload based scenarios;
+echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
+echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features
+echo "NO_TTWU_QUEUE" > /sys/kernel/debug/sched_features
+echo "NO_RT_RUNTIME_SHARE" > /sys/kernel/debug/sched_features
 
 # Enable Fast Charge for slightly faster battery charging when being connected to a USB 3.1 port
 echo "1" > /sys/kernel/fast_charge/force_fast_charge
@@ -274,12 +275,7 @@ echo "25000" > /sys/power/pm_freeze_timeout
 #Enable audio high performance mode by default
 echo "1" > /sys/module/snd_soc_wcd9330/parameters/high_perf_mode
 
-#Fstrim for a final boost
-#fstrim /data;
-#fstrim /cache;
-#fstrim /system;
-
-sleep 15;
+sleep 5;
 
 # Push a semi-needed log to the internal storage with a "report" if the script could be executed or not;
 # Script log file location
