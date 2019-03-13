@@ -12,7 +12,7 @@
 print_modname() {
   ui_print " "
   ui_print "    *******************************************"
-  ui_print "    Glitchify - v1.0"
+  ui_print "    Glitchify - v1.3"
   ui_print "    *******************************************"
   ui_print "    By: Glitch"
   ui_print "    *******************************************"
