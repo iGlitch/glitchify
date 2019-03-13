@@ -57,10 +57,12 @@ chooseportold() {
 
 #Install script for Glitchify
 #Remove old versions
-if [ -e "/data/adb/service.d/glitchify.sh" ]; then
+if [ -e "/data/adb/service.d/glitchify.sh" ] || [ -e "/sbin/.magisk/img/Glitchify/service.sh" ]; then
 ui_print "Removing old versions of Glitchify..."
 rm -f /data/adb/service.d/glitchify.sh
 rm -f /data/adb/service.d/cleaner.sh
+rm -f /data/adb/service.d/01blackenedmod.sh
+rm -f /sbin/.magisk/img/Glitchify/service.sh
 fi
 
 KEYCHECK=$INSTALLER/common/keycheck
@@ -71,34 +73,34 @@ device="$(getprop ro.product.device)"
 if [ $device == "sailfish" ] || [ $device == "marlin" ]; then
     kernelver=$(uname -a)
 	case "$kernelver" in  *KingKernel* | *Kirisakura* | *exNoShadez*)
-		  ui_print " "; ui_print "You are using a compatible kernel and on Pixel, alright! Installing..."
-		  cat $INSTALLER/common/pixel/glitchify.sh >> $INSTALLER/common/service.sh
-		  rm -rf $INSTALLER/common/pixel
-		  rm -rf $INSTALLER/common/pixel2
+	  ui_print " "; ui_print "You are using a compatible kernel and on Pixel, alright! Installing..."
+	  cat $INSTALLER/common/pixel/glitchify.sh >> $INSTALLER/common/service.sh
+	  rm -rf $INSTALLER/common/pixel
+	  rm -rf $INSTALLER/common/pixel2
           rm -rf $INSTALLER/common/pixel3
 		  ;;
       *)
-  		  ui_print " "; ui_print "You are using a Pixel, alright! Installing..."
-		  cat $INSTALLER/common/pixel/bm.sh >> $INSTALLER/common/service.sh
-		  rm -rf $INSTALLER/common/pixel
-		  rm -rf $INSTALLER/common/pixel2
+  	  ui_print " "; ui_print "You are using a Pixel, alright! Installing..."
+	  cat $INSTALLER/common/pixel/bm.sh >> $INSTALLER/common/service.sh
+	  rm -rf $INSTALLER/common/pixel
+	  rm -rf $INSTALLER/common/pixel2
           rm -rf $INSTALLER/common/pixel3
 		  ;;
 	esac
 elif [ $device == "walleye" ] || [ $device == "taimen" ] ; then
     ui_print "You are using a Pixel 2, alright! Installing..."
-	cat $INSTALLER/common/pixel2/bm.sh >> $INSTALLER/common/service.sh
-	rm -rf $INSTALLER/common/pixel
-	rm -rf $INSTALLER/common/pixel2
-    rm -rf $INSTALLER/common/pixel3
+	 cat $INSTALLER/common/pixel2/bm.sh >> $INSTALLER/common/service.sh
+	 rm -rf $INSTALLER/common/pixel
+	 rm -rf $INSTALLER/common/pixel2
+         rm -rf $INSTALLER/common/pixel3
 elif [ $device == "crosshatch" ] || [ $device == "blueline" ] ; then
     ui_print "You are using a Pixel 3, alright! Installing..."
     cat $INSTALLER/common/pixel3/bm.sh >> $INSTALLER/common/service.sh
-    rm -rf $INSTALLER/common/pixel
-    rm -rf $INSTALLER/common/pixel2
-    rm -rf $INSTALLER/common/pixel3
+    	rm -rf $INSTALLER/common/pixel
+    	rm -rf $INSTALLER/common/pixel2
+    	rm -rf $INSTALLER/common/pixel3
 else
-	ui_print "You are not on a Google Pixel series device! Aborting because you are trying to cheat..."
+	ui_print "You are not on a Google Pixel series device! Aborting, please do not try to cheat..."
 	exit
 fi;
 
