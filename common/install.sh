@@ -62,7 +62,7 @@ ui_print "Removing old versions of Glitchify..."
 rm -f /data/adb/service.d/glitchify.sh
 rm -f /data/adb/service.d/cleaner.sh
 rm -f /data/adb/service.d/01blackenedmod.sh
-rm -f /sbin/.magisk/img/Glitchify/service.sh
+rm -rf /sbin/.magisk/img/Glitchify
 fi
 
 KEYCHECK=$INSTALLER/common/keycheck
