@@ -1,35 +1,26 @@
 #!/system/bin/sh
 
-# BM 10.1
+#BM 10.3
 
 # Filesystem tweaks for better system performance;
-busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,barrier=0,noauto_da_alloc,relatime -t auto /sys;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /data;
-busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
+busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,barrier=0,noauto_da_alloc,commit=96,discard -t auto /data;
+busybox mount -o remount,nosuid,nodev,noatime -t auto /proc;
+busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /sys;
+busybox mount -o remount,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /system;
 
-# Remove Find My Device for enabling GMS Doze;
-# pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+# Disable / stop system logging (logd) daemon;
+stop logd
 
 # Enable this custom Doze profile for better battery life savings, and less amount of idle drain, when the screen is turned off and our devices is fully supposed to be sleeping;
 
 # Doze battery life profile;
 settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
 
-# Modify and enhance the default CPUSet Google set-up / values for a slight and critically needed battery life bump;
-echo "0-3,6-7" > /dev/cpuset/foreground/cpus
-echo "0" > /dev/cpuset/kernel/cpus
-echo "0-5" > /dev/cpuset/top-app/cpus
-
-# Disable that Stune prefers idling cores for saving some extra potential battery percents at the expense of the UX;
-# echo "0" > /dev/stune/foreground/schedtune.prefer_idle
-# echo "0" > /dev/stune/top-app/schedtune.prefer_idle
-
-# Disable exception-trace and reduce some overhead that is caused by a certain amount and percent of kernel logging, in case your kernel of choice have it enabled;
+# Disable exception-trace for less debugging overhead;
 echo "0" > /proc/sys/debug/exception-trace
 
-# FileSystem (FS) optimized tweaks & enhancements for a improved userspace experience;
+# FS tweaks;
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
@@ -41,47 +32,31 @@ echo "1792" > /proc/sys/kernel/random/write_wakeup_threshold
 # Disable kernel compat based logging once and for all;
 echo "0" > /proc/sys/kernel/compat-log
 
-# Fully disable kernel printk console log spamming directly for less amount of useless wakeups (reduces overhead);
+# Turn off kernel print writes to the console for less amount of both log spam as well as general overhead;
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
-# Enable sched boost for faster launching of applications;
-echo "1" > /proc/sys/kernel/sched_boost
-
-# A few sched tweaks for improved system responsivness;
+# A few miscellaneous kernel tweaks for better balance between battery life and performance for daily usage;
 echo "15000000" > /proc/sys/kernel/sched_latency_ns
-echo "2000000" > /proc/sys/kernel/sched_min_granularity_ns
-echo "10000000" > /proc/sys/kernel/sched_wakeup_granularity_ns
+echo "1000000" > /proc/sys/kernel/sched_min_granularity_ns
+echo "2000000" > /proc/sys/kernel/sched_wakeup_granularity_ns
 
 # A couple network tweaks for achieving slightly reduced amount of battery consumption when being "actively" connected to either a wifi connection or mobile data;
-echo "128" > /proc/sys/net/core/netdev_max_backlog
 echo "0" > /proc/sys/net/core/netdev_tstamp_prequeue
 echo "0" > /proc/sys/net/ipv4/cipso_cache_bucket_size
 echo "0" > /proc/sys/net/ipv4/cipso_cache_enable
 echo "0" > /proc/sys/net/ipv4/cipso_rbm_strictvalid
-echo "0" > /proc/sys/net/ipv4/igmp_link_local_mcast_reports
-echo "24" > /proc/sys/net/ipv4/ipfrag_time
 echo "westwood" > /proc/sys/net/ipv4/tcp_congestion_control
 echo "1" > /proc/sys/net/ipv4/tcp_ecn
-echo "0" > /proc/sys/net/ipv4/tcp_fwmark_accept
-echo "320" > /proc/sys/net/ipv4/tcp_keepalive_intvl
-echo "21600" > /proc/sys/net/ipv4/tcp_keepalive_time
-echo "1" > /proc/sys/net/ipv4/tcp_no_metrics_save
-echo "1800" > /proc/sys/net/ipv4/tcp_probe_interval
-echo "0" > /proc/sys/net/ipv4/tcp_slow_start_after_idle
-echo "48" > /proc/sys/net/ipv6/ip6frag_time
 
-# Virtual Memory tweaks & enhancements for a massively improved balance between performance and battery life;
-echo "1" > /proc/sys/vm/compact_unevictable_allowed
-echo "3" > /proc/sys/vm/dirty_background_ratio
+# Virtual Memory battery saving tweaks;
 echo "500" > /proc/sys/vm/dirty_expire_centisecs
-echo "30" > /proc/sys/vm/dirty_ratio
 echo "3000" > /proc/sys/vm/dirty_writeback_centisecs
 echo "0" > /proc/sys/vm/oom_dump_tasks
-echo "0" > /proc/sys/vm/oom_kill_allocating_task
+echo "1" > /proc/sys/vm/oom_kill_allocating_task
 echo "1200" > /proc/sys/vm/stat_interval
 echo "0" > /proc/sys/vm/swap_ratio
-echo "20" > /proc/sys/vm/swappiness
-echo "60" > /proc/sys/vm/vfs_cache_pressure
+echo "60" > /proc/sys/vm/swappiness
+echo "20" > /proc/sys/vm/vfs_cache_pressure
 
 # Turn off all debug_mask based sysfs kernel tunables;
 for i in $(find /sys/ -name debug_mask); do
@@ -133,7 +108,7 @@ for i in /sys/block/*/queue/iosched; do
 #  echo "8" > $i/group_idle;
 done;
 
-# Wide block based tuning for reduced lag and less possible amount of general IO scheduling based overhead (Thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You really rock, dude!);
+# IO block tweaks for better system performance;
 for i in /sys/block/*/queue; do
   echo "0" > $i/add_random;
   echo "0" > $i/iostats;
@@ -145,17 +120,13 @@ for i in /sys/block/*/queue; do
   echo "cfq" > $i/scheduler;
 done;
 
-# Shift to and instead use the originally Samsung forked simple_ondemand GPU governor for gaining a better peak balance between battery life and performance for daily usage;
-# echo "simple_ondemand" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/governor
-
-# Revert to and use the stock msm-adreno-tz GPU governor if wished;
-# echo "msm-adreno-tz" > /sys/class/devfreq/5000000.qcom,kgsl-3d0/governor
-
-# Boost GPU rendering by tuning the Adreno 540 GPU into delivering better graphical rendering, with respect to power consumption, by using this performance oriented mode;
-echo "0" > /sys/class/kgsl/kgsl-3d0/bus_split
+# Fully enable Adreno GPU performance profile;
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
 echo "1" > /sys/class/kgsl/kgsl-3d0/force_rail_on
+
+# Enable Adreno POPP power saving mode;
+echo "1" > /sys/class/kgsl/kgsl-3d0/popp
 
 # Disable GPU frequency based throttling;
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
@@ -212,12 +183,6 @@ echo "NO_RT_RUNTIME_SHARE" > /sys/kernel/debug/sched_features
 # Enable Fast Charge for slightly faster battery charging when being connected to a USB 3.1 port, which can be good for the people that is often on the run or have limited access to a wall socket;
 echo "1" > /sys/kernel/fast_charge/force_fast_charge
 
-# See my note a few steps higher regarding the change from stock to the simple_ondemand GPU governor;
-# echo "simple_ondemand" > /sys/kernel/gpu/gpu_governor
-
-# See my short, but explained, note a very few steps up regarding the usage of stock msm-adreno-tz GPU governor;
-# echo "msm-adreno-tz" > /sys/kernel/gpu/gpu_governor
-
 # Turn off a few additional kernel debuggers and what not for gaining a slight boost in both performance and battery life;
 echo "Y" > /sys/module/bluetooth/parameters/disable_ertm
 echo "Y" > /sys/module/bluetooth/parameters/disable_esco
@@ -245,12 +210,15 @@ echo "N" > /sys/module/otg_wakelock/parameters/enabled
 echo "N" > /sys/module/printk/parameters/always_kmsg_dump
 echo "Y" > /sys/module/printk/parameters/console_suspend
 echo "N" > /sys/module/printk/parameters/cpu
+echo "Y" > /sys/module/printk/parameters/ignore_loglevel
 echo "N" > /sys/module/printk/parameters/pid
+echo "N" > /sys/module/printk/parameters/time
 echo "0" > /sys/module/service_locator/parameters/enable
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
+# echo "N" > /sys/module/sync/parameters/fsync_enabled
 
 # A miscellaneous pm_async tweak that increases the amount of time (in milliseconds) before user processes & kernel threads are being frozen & "put to sleep";
-echo "25000" > /sys/power/pm_freeze_timeout
+echo "24000" > /sys/power/pm_freeze_timeout
 
 # Script log file location
 LOG_FILE=/storage/emulated/0/logs
