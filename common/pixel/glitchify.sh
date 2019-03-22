@@ -9,17 +9,23 @@ if [ -e /system/etc/sysctl.conf ]; then
   mount -o remount,ro /system;
 fi;
 
-# Mounting FS tweak for better overall partition performance;
-busybox mount -o remount,nosuid,nodev,commit=96,noblock_validity,noatime,data=writeback,nodiratime,noauto_da_alloc,relatime -t auto /;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,barrier=0,noauto_da_alloc,relatime -t auto /sys;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /data;
-busybox mount -o remount,nosuid,nodev,noblock_validity,commit=96,noatime,data=writeback,nodiratime,relatime,barrier=0,noauto_da_alloc,discard -t auto /system;
+# Filesystem tweaks for better system performance;
+busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,barrier=0,noauto_da_alloc,commit=96,discard -t auto /data;
+busybox mount -o remount,nosuid,nodev,noatime -t auto /proc;
+busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /sys;
+busybox mount -o remount,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /system;
+
+# Disable / stop system logging (logd) daemon;
+stop logd
 
 # Remove Find My Device and other Google stuff for enabling GMS Doze;
 #pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
 pm disable com.google.android.gms/.update.SystemUpdateActivity 
 pm disable com.google.android.gms/.update.SystemUpdateService
+
+# Doze battery life profile;
+settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
 
 #Enable msm_thermal and core_control
 echo "Y" > /sys/module/msm_thermal/parameters/enabled
@@ -71,8 +77,6 @@ echo "777" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/up_rate_limit_us
 #echo "825600" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/hispeed_freq
 #echo "1" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/hispeed_load
 echo "0" > /sys/devices/system/cpu/cpu3/cpufreq/schedutil/pl
-
-sleep 5;
 
 # Disable exception-trace and reduce some overhead that is caused by a certain amount and percent of kernel logging, in case your kernel of choice have it enabled;
 echo "0" > /proc/sys/debug/exception-trace
@@ -164,7 +168,10 @@ echo "0" > /sys/module/smp2p/parameters/debug_mask
 echo "0" > /sys/module/usb_bam/parameters/enable_event_log
 echo "Y" > /sys/module/printk/parameters/console_suspend
 echo "N" > /sys/module/printk/parameters/cpu
+echo "Y" > /sys/module/printk/parameters/ignore_loglevel
 echo "N" > /sys/module/printk/parameters/pid
+echo "N" > /sys/module/printk/parameters/time
+echo "0" > /sys/module/service_locator/parameters/enable
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
 
 if [ -e /sys/module/logger/parameters/log_mode ]; then
