@@ -377,7 +377,7 @@ patch_script() {
     sed -i "4i $i=$(eval echo \$$i)" $1
   done
   if $MAGISK; then
-    sed -i -e "s|\$MODPATH|$MOUNTEDROOT|g" -e "10i INFO=$MOUNTEDROOT/$MODID-files" $1
+    sed -i -e "s|\$MODPATH|$MOUNTEDROOT|g" -e "10i INFO=$MOUNTEDROOT/glitchify-files" $1
   else
     sed -i -e "s|\$MODULEROOT||g" -e "s|\$MOUNTEDROOT||g" -e "s|\$MODPATH||g" -e "10i INFO=$INFO" $1
   fi
@@ -392,11 +392,11 @@ install_script() {
   patch_script "$1"
   if $MAGISK; then
     case $(basename $1) in
-      post-fs-data.sh|service.sh) cp_ch -n $1 $MODULEROOT/$MODID/$(basename $1);;
+      post-fs-data.sh|service.sh) cp_ch -n $1 $MODULEROOT/glitchify/$(basename $1);;
       *) cp_ch -n $1 $INPATH/$(basename $1) 0755;;
     esac
   else
-    cp_ch -n $1 $NVBASE/$MODID-$(basename $1 | sed 's/.sh$//')$EXT 0700
+    cp_ch -n $1 $NVBASE/glitchify-$(basename $1 | sed 's/.sh$//')$EXT 0700
   fi
 }
 
@@ -418,7 +418,7 @@ uninstall_files() {
   local FILE
   if [ -z "$1" ] || [ "$1" == "$INFO" ]; then
     FILE=$INFO
-    $BOOTMODE && [ -f $MODULEROOT/$MODID/$MODID-files ] && FILE=$MODULEROOT/$MODID/$MODID-files
+    $BOOTMODE && [ -f $MODULEROOT/glitchify/glitchify-files ] && FILE=$MODULEROOT/glitchify/glitchify-files
     $MAGISK || [ -f $FILE ] || abort "   ! Mod not detected !"
   else
     FILE="$1"
