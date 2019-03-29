@@ -1,7 +1,7 @@
 $SYSOVER && { mount -o rw,remount /system; [ -L /system/vendor ] && mount -o rw,remount /vendor; }
 
 FILE=$INFO
-[ -f $MODPATH/$MODID-files ] && FILE=$MODPATH/$MODID-files
+[ -f $MODPATH/glitchify-files ] && FILE=$MODPATH/glitchify-files
 if [ -f $FILE ]
   while read LINE; do
     if [ "$(echo -n $LINE | tail -c 1)" == "~" ] || [ "$(echo -n $LINE | tail -c 9)" == "NORESTORE" ]; then
