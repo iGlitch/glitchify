@@ -255,7 +255,7 @@ if [ -e "/sys/module/xhci_hcd/parameters/wl_divide" ]; then
 write /sys/module/xhci_hcd/parameters/wl_divide "N"
 fi
 # Enable a tuned Boeffla wakelock blocker at boot for both better active & idle battery life;
-echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_timerfd_ws;enable_qcom_rx_wakelock_ws;enable_netmgr_wl_ws;enable_netlink_ws;enable_ipa_ws;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_timerfd_ws;enable_qcom_rx_wakelock_ws;enable_netmgr_wl_ws;enable_netlink_ws;enable_ipa_ws;tftp_server_wakelock;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
 
 # Tweak and decrease tx_queue_len default stock value(s) for less amount of generated bufferbloat and for gaining slightly faster network speed and performance;
 for i in $(find /sys/class/net -type l); do

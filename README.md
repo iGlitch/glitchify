@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.2-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Mar%2013%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.3-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Mar%2029%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -35,8 +35,8 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - junk cleaner - removes cache, txt, logs from places they don't need to be every 60 hours. (fb messenger images may become blank)
 
 ## Requirements
-- [Magisk v17+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
-- [Busybox](https://forum.xda-developers.com/attachment.php?attachmentid=4654214&d=1543441627)
+- [Magisk v18+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
+- [Busybox](https://github.com/Magisk-Modules-Repo/busybox-ndk)
 - One of the compatible devices from the compatibility list.
 
 ## Device Compatibility
@@ -49,6 +49,12 @@ Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
 ```
 ## Changelog
+### v1.3 (2019/03/30)
+- Updated to latest unity template
+- Updated BM mount script
+- Updated SQLite3 binary
+- Cleanup for smaller size!
+
 ### v1.2 (2019/02/18)
 - Moved some setprops into system.prop
 - Updated BM for all Pixel devices. 
