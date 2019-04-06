@@ -133,12 +133,6 @@ if $BOOTMODE; then
   fi
 fi
 
-# post-fs-data mode scripts
-$POSTFSDATA && cp -af $TMPDIR/post-fs-data.sh $MODPATH/post-fs-data.sh
-
-# service mode scripts
-$LATESTARTSERVICE && cp -af $TMPDIR/service.sh $MODPATH/service.sh
-
 on_install
 
 # Handle replace folders
