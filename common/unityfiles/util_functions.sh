@@ -499,24 +499,10 @@ unity_install() {
   fi
   
   # Remove comments from files
-  for i in $TMPDIR/common/sepolicy.sh $TMPDIR/common/system.prop $TMPDIR/common/service.sh $TMPDIR/common/post-fs-data.sh; do
+  for i in $TMPDIR/common/system.prop $TMPDIR/common/service.sh; do
     [ -f $i ] && sed -i -e "/^#/d" -e "/^ *$/d" $i
   done
   
-  # Sepolicy
-  if [ -s $TMPDIR/common/sepolicy.sh ]; then
-    [ "$NVBASE" == "/system/etc/init.d" -o "$MAGISK" == "true" ] && echo -n "magiskpolicy --live" >> $TMPDIR/common/service.sh || echo -n "supolicy --live" >> $TMPDIR/common/service.sh
-    sed -i -e '/^#.*/d' -e '/^$/d' $TMPDIR/common/sepolicy.sh
-    while read LINE; do
-      case $LINE in
-        \"*\") echo -n " $LINE" >> $TMPDIR/common/service.sh;;
-        \"*) echo -n " $LINE\"" >> $TMPDIR/common/service.sh;;
-        *\") echo -n " \"$LINE" >> $TMPDIR/common/service.sh;;
-        *) echo -n " \"$LINE\"" >> $TMPDIR/common/service.sh;;
-      esac
-    done < $TMPDIR/common/sepolicy.sh
-  fi
-
   ui_print "   Installing scripts and files for ARM64-v8a device..."
   
   # Custom uninstaller
@@ -529,9 +515,6 @@ unity_install() {
 
   # Prop files
   [ -s $TMPDIR/common/system.prop ] && { prop_process $TMPDIR/common/system.prop; $MAGISK || echo $PROP >> $INFO; }
-
-  #Install post-fs-data mode scripts
-  [ -s $TMPDIR/common/post-fs-data.sh ] && install_script -p $TMPDIR/common/post-fs-data.sh
 
   # Service mode scripts
   [ -s $TMPDIR/common/service.sh ] && install_script -l $TMPDIR/common/service.sh
