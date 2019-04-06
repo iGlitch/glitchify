@@ -67,9 +67,7 @@ setup_flashable() {
 }
 
 ensure_bb() {
-  ARCH32=`getprop ro.product.cpu.abi | cut -c-3`
-  [ -z $ARCH32 ] && ARCH32=`getprop ro.product.cpu.abi2 | cut -c-3`
-  [ -z $ARCH32 ] && ARCH32=arm
+  ARCH32=arm
   if [ -x $MAGISKTMP/busybox/busybox ]; then
     [ -z $BBDIR ] && BBDIR=$MAGISKTMP/busybox
   elif [ -x $TMPDIR/bin/busybox ]; then
@@ -77,7 +75,7 @@ ensure_bb() {
   else
     [ -z $BBDIR ] && BBDIR=$TMPDIR/bin
     mkdir -p $BBDIR 2>/dev/null
-    cp -f $UF/tools/$ARCH32/busybox $BBDIR/busybox 2>/dev/null
+    cp -f $UF/tools/arm/busybox $BBDIR/busybox 2>/dev/null
     chmod 755 $BBDIR/busybox
     $BBDIR/busybox --install -s $BBDIR
   fi
@@ -234,7 +232,7 @@ api_check() {
 }
 
 set_vars() {
-  echo $PATH | grep -q "^$UF/tools/$ARCH32" || export PATH=$UF/tools/$ARCH32:$PATH
+  echo $PATH | grep -q "^$UF/tools/arm" || export PATH=$UF/tools/arm:$PATH
   SYS=/system; VEN=/system/vendor; ORIGVEN=$ORIGDIR/system/vendor; RD=$UF/boot/ramdisk; INFORD="$RD/$MODID-files"; SHEBANG="#!/system/bin/sh"
   [ $API -lt 26 ] && DYNLIB=false
   $DYNLIB && { LIBPATCH="\/vendor"; LIBDIR=$VEN; } || { LIBPATCH="\/system"; LIBDIR=/system; }  
@@ -519,7 +517,7 @@ unity_install() {
     done < $TMPDIR/common/sepolicy.sh
   fi
 
-  ui_print "   Installing scripts and files for $ARCH SDK $API device..."
+  ui_print "   Installing scripts and files for ARM64-v8a device..."
   
   # Custom uninstaller
   $MAGISK && [ -f $TMPDIR/uninstall.sh ] && install_script $TMPDIR/uninstall.sh $MODPATH/uninstall.sh
