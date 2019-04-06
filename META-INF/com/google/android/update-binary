@@ -85,7 +85,7 @@ else
   MODULEROOT=$MOUNTPATH
 fi
 
-MODID="glitchery"
+MODID="glitchify"
 MODPATH=$MODULEROOT/glitchify
 
 print_modname
