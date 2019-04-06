@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 #Glitchify kernel tuner
-
+sleep 20;
 # Disable sysctl.conf to prevent ROM interference #1
 if [ -e /system/etc/sysctl.conf ]; then
   mount -o remount,rw /system;
@@ -220,10 +220,8 @@ for i in /sys/devices/virtual/block/*/queue; do
   echo "0" > $i/iostats;
   echo "0" > $i/nomerges;
   echo "32" > $i/nr_requests;
-  #echo "128" > $i/read_ahead_kb;
   echo "0" > $i/rotational;
   echo "1" > $i/rq_affinity;
-  #echo "write through" > $i/write_cache;
 done;
 
 # Optimize the Adreno 530 GPU into delivering better overall graphical rendering performance, but do it with "respect" to battery life as well as power consumption as far as possible with less amount of possible tradeoffs; (Commented out because adrenoidler/boost is in the kernel already)
@@ -241,8 +239,8 @@ echo "7500" > /sys/module/adreno_idler/parameters/adreno_idler_idleworkload
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
 
 #1028 readahead KB for sde and sdf io scheds
-#echo "1028" > /sys/block/sde/queue/read_ahead_kb
-#echo "1028" > /sys/block/sdf/queue/read_ahead_kb
+echo "1028" > /sys/block/sde/queue/read_ahead_kb
+echo "1028" > /sys/block/sdf/queue/read_ahead_kb
 
 # Decrease both battery as well as power consumption that is being caused by the screen by lowering how much light the pixels, the built-in LED switches and the LCD backlight module is releasing & "kicking out" by carefully tuning / adjusting their maximum values a little bit to the balanced overall range of their respective spectrums;
 echo "175" > /sys/class/leds/blue/max_brightness
@@ -255,7 +253,8 @@ if [ -e "/sys/module/xhci_hcd/parameters/wl_divide" ]; then
 write /sys/module/xhci_hcd/parameters/wl_divide "N"
 fi
 # Enable a tuned Boeffla wakelock blocker at boot for both better active & idle battery life;
-echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_timerfd_ws;enable_qcom_rx_wakelock_ws;enable_netmgr_wl_ws;enable_netlink_ws;enable_ipa_ws;tftp_server_wakelock;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+#echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_timerfd_ws;enable_qcom_rx_wakelock_ws;enable_netmgr_wl_ws;enable_netlink_ws;enable_ipa_ws;tftp_server_wakelock;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+echo "wlan_pno_wl;wlan_ipa;wcnss_filter_lock;[timerfd];hal_bluetooth_lock;IPA_WS;sensor_ind;wlan;netmgr_wl;qcom_rx_wakelock;SensorService_wakelock;tftp_server_wakelock;wlan_wow_wl;wlan_extscan_wl;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
 
 # Tweak and decrease tx_queue_len default stock value(s) for less amount of generated bufferbloat and for gaining slightly faster network speed and performance;
 for i in $(find /sys/class/net -type l); do
@@ -282,6 +281,12 @@ echo "25000" > /sys/power/pm_freeze_timeout
 #Enable audio high performance mode by default
 echo "1" > /sys/module/snd_soc_wcd9330/parameters/high_perf_mode
 
+sleep 3;
+
+fstrim /data;
+fstrim /cache;
+fstrim /system;
+
 sleep 5;
 
 # Push a semi-needed log to the internal storage with a "report" if the script could be executed or not;
@@ -296,5 +301,5 @@ else
   echo "Glitchify failed!" >> /storage/emulated/0/logs/script.log
   exit 1
 fi
-  
+
 # Done!
