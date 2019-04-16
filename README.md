@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.3-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Mar%2029%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.3-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Apr%2016%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -12,7 +12,7 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 ## Features
 - Sets *schedutil* CPU governer by default (if it exists in the kernel)
 - frequency tweaks for good battery without extreme sacrifice of performance
-- fsync at boot
+- fstrim at boot
 - Up to date Unity template (as of the date of this posting)
 - msm_thermal/core_control enabled by default
 - Customized CPUSet profile
@@ -38,6 +38,9 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - [Magisk v18+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
 - [Busybox](https://github.com/Magisk-Modules-Repo/busybox-ndk)
 - One of the compatible devices from the compatibility list.
+
+## Install
+- Flash the .zip from the Releases tab using Magisk Manager or TWRP.
 
 ## Device Compatibility
 ```
@@ -78,8 +81,8 @@ Glitchify modifies things from the `kernel` level. **This is only tested on Goog
 **Glitch** - [iGlitch](https://github.com/iGlitch)
 
 Thanks goes to those wonderful people
-- [Unity template](https://github.com/Zackptg5/Unity) @ahrion & @Zackptg5 
-- [Magisk](https://github.com/topjohnwu/Magisk) @topjohnwu
+- [Unity template](https://github.com/Zackptg5/Unity)
+- [Magisk](https://github.com/topjohnwu/Magisk)
 - xFireFly93, gloeyisk, simonsmh, korom42
 - Authors of kernels with schedutil additions.
 
