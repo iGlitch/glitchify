@@ -3,9 +3,6 @@
 # Unity (Un)Install Utility Functions
 # Adapted from topjohnwu's Magisk General Utility Functions
 #
-# Magisk util_functions is still used and will override any listed here
-# They're present for system installs
-#
 ##########################################################################################                   
 
 ###################
@@ -102,7 +99,7 @@ recovery_cleanup() {
   [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB
   [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE
   [ -z $OLD_LD_CFG ] || export LD_CONFIG_FILE=$OLD_LD_CFG
-  ui_print "- Unmounting partitions"
+  ui_print "• Unmounting partitions"
   [ "$supersuimg" -o -d /su ] && umount /su 2>/dev/null
   umount -l /system_root 2>/dev/null
   umount -l /system 2>/dev/null
@@ -179,18 +176,9 @@ mount_partitions() {
 }
 
 api_level_arch_detect() {
-  API=`grep_prop ro.build.version.sdk`
-  ABI=`grep_prop ro.product.cpu.abi | cut -c-3`
-  ABI2=`grep_prop ro.product.cpu.abi2 | cut -c-3`
-  ABILONG=`grep_prop ro.product.cpu.abi`
-
-  ARCH=arm
+  ARCH=arm64
   ARCH32=arm
-  IS64BIT=false
-  if [ "$ABI" = "x86" ]; then ARCH=x86; ARCH32=x86; fi;
-  if [ "$ABI2" = "x86" ]; then ARCH=x86; ARCH32=x86; fi;
-  if [ "$ABILONG" = "arm64-v8a" ]; then ARCH=arm64; ARCH32=arm; IS64BIT=true; fi;
-  if [ "$ABILONG" = "x86_64" ]; then ARCH=x64; ARCH32=x86; IS64BIT=true; fi;
+  IS64BIT=true
 }
 
 supersuimg_mount() {
@@ -233,27 +221,27 @@ api_check() {
 
 set_vars() {
   echo $PATH | grep -q "^$UF/tools/arm" || export PATH=$UF/tools/arm:$PATH
-  SYS=/system; VEN=/system/vendor; ORIGVEN=$ORIGDIR/system/vendor; RD=$UF/boot/ramdisk; INFORD="$RD/$MODID-files"; SHEBANG="#!/system/bin/sh"
+  SYS=/system; VEN=/system/vendor; ORIGVEN=$ORIGDIR/system/vendor; RD=$UF/boot/ramdisk; INFORD="$RD/glitchify-files"; SHEBANG="#!/system/bin/sh"
   [ $API -lt 26 ] && DYNLIB=false
   $DYNLIB && { LIBPATCH="\/vendor"; LIBDIR=$VEN; } || { LIBPATCH="\/system"; LIBDIR=/system; }  
   if $MAGISK; then
-    imageless_magisk && MOUNTEDROOT=$NVBASE/modules/$MODID || MOUNTEDROOT=$MAGISKTMP/img/$MODID
+    imageless_magisk && MOUNTEDROOT=$NVBASE/modules/glitchify || MOUNTEDROOT=$MAGISKTMP/img/glitchify
     if $BOOTMODE; then
       MOD_VER="$MOUNTEDROOT/module.prop"
       ORIGDIR="$MAGISKTMP/mirror"
     else
       MOD_VER="$MODPATH/module.prop"
     fi
-    INFO="$MODPATH/$MODID-files"; PROP=$MODPATH/system.prop; UNITY="$MODPATH"
+    INFO="$MODPATH/glitchify-files"; PROP=$MODPATH/system.prop; UNITY="$MODPATH"
     local ROOTTYPE="MagiskSU"
   fi
   if ! $MAGISK || $SYSOVER; then
-    UNITY=""; INFO=/system/etc/$MODID-files
+    UNITY=""; INFO=/system/etc/glitchify-files
     [ -L /system/vendor ] && { VEN=/vendor; $BOOTMODE && ORIGVEN=$ORIGDIR/vendor; }
     if ! $MAGISK; then
       # Determine system boot script type
       supersuimg_mount
-      MOD_VER="/system/etc/$MODID-module.prop"; NVBASE=/system/etc/init.d; ROOTTYPE="Rootless/other root"
+      MOD_VER="/system/etc/glitchify-module.prop"; NVBASE=/system/etc/init.d; ROOTTYPE="Rootless/other root"
       if [ "$supersuimg" ] || [ -d /su ]; then
         SHEBANG="#!/su/bin/sush"; ROOTTYPE="Systemless SuperSU"; NVBASE=/su/su.d
       elif [ -e "$(find /data /cache -name supersu_is_here | head -n1)" ]; then
@@ -264,7 +252,7 @@ set_vars() {
       elif [ -f /system/xbin/su ]; then
         [ "$(grep "SuperSU" /system/xbin/su)" ] && { NVBASE=/system/su.d; ROOTTYPE="System SuperSU"; } || ROOTTYPE="LineageOS SU"
       fi
-      PROP=$NVBASE/$MODID-props.sh
+      PROP=$NVBASE/glitchify-props.sh
     fi
   fi
   ui_print "- $ROOTTYPE detected"
@@ -468,7 +456,7 @@ center_and_print() {
 #######
 
 unity_install() {
-  ui_print "- Installing"
+  ui_print "• Installing"
 
   # Preinstall Addons
   run_addons -h
@@ -503,7 +491,7 @@ unity_install() {
     [ -f $i ] && sed -i -e "/^#/d" -e "/^ *$/d" $i
   done
   
-  ui_print "   Installing scripts and files for ARM64-v8a device..."
+  ui_print " • Installing scripts and files..."
   
   # Custom uninstaller
   $MAGISK && [ -f $TMPDIR/uninstall.sh ] && install_script $TMPDIR/uninstall.sh $MODPATH/uninstall.sh
@@ -571,7 +559,7 @@ unity_install() {
 
 unity_uninstall() {
   ui_print " "
-  ui_print "- Uninstalling"
+  ui_print "• Uninstalling"
   
   # Uninstall Addons
   run_addons -u
@@ -593,7 +581,7 @@ unity_uninstall() {
   run_addons -v
 
   ui_print " "
-  ui_print "- Completing uninstall -"
+  ui_print "• Completing uninstall -"
 }
 
 comp_check() {
@@ -621,15 +609,6 @@ unity_main() {
     [ "$(tail -1 "$i")" ] && echo "" >> "$i"
   done
 
-  #Debug
-  if $DEBUG; then
-    ui_print " "
-    ui_print "- Debug mode"
-    ui_print "  Debug log will be written to: /sdcard/$MODID-debug.log"
-    exec 2>/sdcard/$MODID-debug.log
-    set -x
-  fi
-
   # Main addons
   [ -f "$TMPDIR/addon.tar.xz" ] && tar -xf $TMPDIR/addon.tar.xz -C $TMPDIR 2>/dev/null
   run_addons -m
@@ -643,7 +622,7 @@ unity_main() {
     ui_print "  ! Mod present in ramdisk but not in system!"
     ui_print "  ! Ramdisk modifications will be uninstalled!"
     . $TMPDIR/addon/Ramdisk-Patcher/uninstall.sh
-  elif $MAGISK && ! $SYSOVER && [ -f "/system/etc/$MODID-files" ]; then
+  elif $MAGISK && ! $SYSOVER && [ -f "/system/etc/glitchify-files" ]; then
     ui_print "  ! Previous system override install detected!"
     ui_print "  ! Removing...!"
     $BOOTMODE && { ui_print "  ! Magisk manager isn't supported!"; abort "   ! Flash in TWRP !"; }
