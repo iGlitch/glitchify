@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-# BM 2.1
+# BM 2.2
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 55;
@@ -11,6 +11,9 @@ echo "0-3" > /dev/cpuset/kernel/cpus
 # FS tweaks for slightly better userspace performance;
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
+
+# Disable printk log spamming to the console;
+echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # A very few minor kernel scheduling tweaks for overall lowered battery consumption while delivering a smooth, snappy and highly responsive system back to the user;
 echo "15000000" > /proc/sys/kernel/sched_latency_ns
@@ -100,12 +103,12 @@ done;
 # Improve both the scaling responsivness and power efficiency of the Schedutil governor by biasing both clusters to use slightly lower frequency steps as often as possible while delivering system performance that is critically needed for the average users usage patterns;
 
 # Little Cluster;
-echo "65" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
-echo "1420800" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
+# echo "65" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
+# echo "1420800" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
 
 # Big Cluster;
-echo "85" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_load
-echo "1996800" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_freq
+# echo "85" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_load
+# echo "1996800" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_freq
 
 # Use the deepest CPU idle state for a few additional power savings if your kernel of choice now supports it;
 echo "1" > /sys/devices/system/cpu/cpuidle/use_deepest_state
@@ -116,6 +119,12 @@ echo "Y" > /sys/kernel/debug/dsi_sw43408_cmd_display/ulps_enable
 
 # Disable some additional excessive kernel debugging;
 echo "N" > /sys/kernel/debug/debug_enabled
+
+# Disable Gentle Fair Sleepers for a smoother UI;
+echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
+
+# Enable Next Buddy for improved cache loyality;
+echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features
 
 # Enable FBT Strict Order for power saving reasons;
 echo "FBT_STRICT_ORDER" > /sys/kernel/debug/sched_features
