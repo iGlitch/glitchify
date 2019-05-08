@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-# BM 2.2
+# BM 2.4
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 55;
@@ -95,20 +95,24 @@ echo "64" > /sys/class/drm/card0/device/idle_timeout_ms
 # Disable GPU frequency based throttling;
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
 
+# Enable, and configure step by step, Boeffla's generic kernel wakelock blocker for potentially better battery life;
+echo "qcom_rx_wakelock;wlan;wlan_wow_wl;wlan_extscan_wl;netmgr_wl;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+
 # Tweak and decrease tx_queue_len default stock value(s) for less amount of generated bufferbloat and for gaining slightly faster network speed and performance;
 for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
 
-# Improve both the scaling responsivness and power efficiency of the Schedutil governor by biasing both clusters to use slightly lower frequency steps as often as possible while delivering system performance that is critically needed for the average users usage patterns;
+# Set the whole LITTLE cluster to use the performance CPU governor instead of the Schedutil governor for overall faster processing of the workload that is actively being put on the low power cores, so the cluster can enter a idle state pretty much faster and thus saving any potential power that otherwise would be wasted on nothing;
 
 # Little Cluster;
-# echo "65" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
-# echo "1420800" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
+echo "performance" > /sys/devices/system/cpu/cpufreq/policy0/scaling_governor
+
+# Bias the big / performance cluster to use a nominal frequency step that is somewhere between the lowest and highest frequency for overall power saving reasons while still keeping the phone smooth, snappy and responsive;
 
 # Big Cluster;
-# echo "85" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_load
-# echo "1996800" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_freq
+echo "1996800" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_freq
+echo "60" > /sys/devices/system/cpu/cpufreq/policy4/schedutil/hispeed_load
 
 # Use the deepest CPU idle state for a few additional power savings if your kernel of choice now supports it;
 echo "1" > /sys/devices/system/cpu/cpuidle/use_deepest_state
@@ -123,11 +127,11 @@ echo "N" > /sys/kernel/debug/debug_enabled
 # Disable Gentle Fair Sleepers for a smoother UI;
 echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
 
-# Enable Next Buddy for improved cache loyality;
+# Enable NEXT_BUDDY for improved cache loyality;
 echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features
 
-# Enable FBT Strict Order for power saving reasons;
-echo "FBT_STRICT_ORDER" > /sys/kernel/debug/sched_features
+# Disable FBT Strict Order for performance reasons;
+echo "NO_FBT_STRICT_ORDER" > /sys/kernel/debug/sched_features
 
 # Use RCU_normal instead of RCU_expedited for improved real-time latency, CPU utilization and energy efficiency;
 echo "0" > /sys/kernel/rcu_expedited
@@ -140,12 +144,13 @@ echo "1" > /sys/kernel/fast_charge/force_fast_charge
 echo "Y" > /sys/module/bluetooth/parameters/disable_ertm
 echo "Y" > /sys/module/bluetooth/parameters/disable_esco
 
-# Slightly configure Sultans custom CPU input boost driver for better system performance as well as battery life;
-echo "15" > /sys/module/cpu_input_boost/parameters/dynamic_stune_boost
-echo "1228800" > /sys/module/cpu_input_boost/parameters/input_boost_freq_lp
-echo "1420800" > /sys/module/cpu_input_boost/parameters/max_boost_freq_lp
+# Slightly adjust Sultans custom CPU input boost driver so it works as good as possible with the pretty minor CPU tweaks that have been previously added a few steps up;
+echo "0" > /sys/module/cpu_input_boost/parameters/input_boost_freq_lp
+echo "1996800" > /sys/module/cpu_input_boost/parameters/max_boost_freq_hp
+echo "0" > /sys/module/cpu_input_boost/parameters/remove_input_boost_freq_lp
+echo "0" > /sys/module/cpu_input_boost/parameters/wake_boost_duration
 
-# Turn off even more additional useless kernel debuggers, masks and modules that is not really needed & used at all;
+# Turn off a few more completely useless kernel modules;
 echo "Y" > /sys/module/cryptomgr/parameters/notests
 echo "0" > /sys/module/diagchar/parameters/diag_mask_clear_param
 echo "N" > /sys/module/drm_kms_helper/parameters/poll
@@ -168,6 +173,7 @@ echo "Y" > /sys/module/printk/parameters/console_suspend
 echo "0" > /sys/module/rmnet_data/parameters/rmnet_data_log_level
 echo "0" > /sys/module/service_locator/parameters/enable
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
+# echo "N" > /sys/module/sync/parameters/fsync_enabled
 echo "Y" > /sys/module/workqueue/parameters/power_efficient
 
 fstrim /data;
