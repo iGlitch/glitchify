@@ -1,9 +1,8 @@
-##########################################################################################
-#
 # Unity (Un)Install Utility Functions
-# Adapted from topjohnwu's Magisk General Utility Functions
+
 #
-##########################################################################################                   
+# Magisk util_functions is still used and will override any listed here
+# They're present for system installs
 
 ###################
 # Helper Functions
@@ -37,7 +36,9 @@ is_mounted() {
 
 abort() {
   ui_print "$1"
+  $MAGISK && ! imageless_magisk && is_mounted $MOUNTPATH && unmount_magisk_img
   $BOOTMODE || recovery_cleanup
+  $DEBUG && debug_log
   exit 1
 }
 
@@ -95,11 +96,11 @@ recovery_actions() {
 }
 
 recovery_cleanup() {
-  export PATH=$OLD_PATH
+  [ -z $OLD_PATH ] || export PATH=$OLD_PATH
   [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB
   [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE
   [ -z $OLD_LD_CFG ] || export LD_CONFIG_FILE=$OLD_LD_CFG
-  ui_print "• Unmounting partitions"
+  ui_print "- Unmounting partitions"
   [ "$supersuimg" -o -d /su ] && umount /su 2>/dev/null
   umount -l /system_root 2>/dev/null
   umount -l /system 2>/dev/null
@@ -139,40 +140,42 @@ find_block() {
   return 1
 }
 
+mount_part() {
+  local PART=$1
+  local POINT=/${PART}
+  [ -L $POINT ] && rm -f $POINT
+  mkdir $POINT 2>/dev/null
+  is_mounted $POINT && return
+  ui_print "- Mounting $PART"
+  mount -o rw $POINT 2>/dev/null
+  if ! is_mounted $POINT; then
+    local BLOCK=`find_block $PART$SLOT`
+    mount -o rw $BLOCK $POINT
+  fi
+  is_mounted $POINT || abort "! Cannot mount $POINT"
+}
+
 mount_partitions() {
   # Check A/B slot
   SLOT=`grep_cmdline androidboot.slot_suffix`
   if [ -z $SLOT ]; then
-    SLOT=_`grep_cmdline androidboot.slot`
-    [ $SLOT = "_" ] && SLOT=
+    SLOT=`grep_cmdline androidboot.slot`
+    [ -z $SLOT ] || SLOT=_${SLOT}
   fi
   [ -z $SLOT ] || ui_print "- Current boot slot: $SLOT"
 
-  ui_print "- Mounting /system, /vendor"
-  mkdir /system 2>/dev/null
-  [ -f /system/build.prop ] || is_mounted /system || mount -o rw /system 2>/dev/null
-  if ! is_mounted /system && ! [ -f /system/build.prop ]; then
-    SYSTEMBLOCK=`find_block system$SLOT`
-    mount -o rw $SYSTEMBLOCK /system
-  fi
-  [ -f /system/build.prop ] || is_mounted /system || abort "! Cannot mount /system"
-  grep -qE '/dev/root|/system_root' /proc/mounts && SYSTEM_ROOT=true || SYSTEM_ROOT=false
-  if [ -f /system/init ]; then
+  mount_part system
+  if [ -f /system/init.rc ]; then
     SYSTEM_ROOT=true
+    [ -L /system_root ] && rm -f /system_root
     mkdir /system_root 2>/dev/null
     mount --move /system /system_root
     mount -o bind /system_root/system /system
+  else
+    grep -qE '/dev/root|/system_root' /proc/mounts && SYSTEM_ROOT=true || SYSTEM_ROOT=false
   fi
-  $SYSTEM_ROOT && { ui_print "- Device is system-as-root"; ROOT=/system_root; }
-  if [ -L /system/vendor ]; then
-    mkdir /vendor 2>/dev/null
-    is_mounted /vendor || mount -o rw /vendor 2>/dev/null
-    if ! is_mounted /vendor; then
-      VENDORBLOCK=`find_block vendor$SLOT`
-      mount -o rw $VENDORBLOCK /vendor
-    fi
-    is_mounted /vendor || abort "! Cannot mount /vendor"
-  fi
+  [ -L /system/vendor ] && mount_part vendor
+  $SYSTEM_ROOT && ui_print "- Device is system-as-root"
 }
 
 api_level_arch_detect() {
@@ -208,26 +211,23 @@ device_check() {
 }
 
 api_check() {
-  local OPT=`getopt -o nx -- "$@"`
+  local OPT=`getopt -o nx -- "$@"` TAPI=$2
   eval set -- "$OPT"
   while true; do
     case "$1" in
-      -n) [ $API -lt $2 ] && abort "! Your system API of $API is less than the minimum api of $2! Aborting!"; shift;;
-      -x) [ $API -gt $2 ] && abort "! Your system API of $API is greater than the maximum api of $2! Aborting!"; shift;;
+      -n) [ $API -lt $TAPI ] && abort "! Your system API of $API is less than the minimum api of $2! Aborting!"; shift;;
+      -x) [ $API -gt $TAPI ] && abort "! Your system API of $API is greater than the maximum api of $2! Aborting!"; shift;;
       --) shift; break;;
     esac
   done
 }
 
 set_vars() {
-  echo $PATH | grep -q "^$UF/tools/arm" || export PATH=$UF/tools/arm:$PATH
-  SYS=/system; VEN=/system/vendor; ORIGVEN=$ORIGDIR/system/vendor; RD=$UF/boot/ramdisk; INFORD="$RD/glitchify-files"; SHEBANG="#!/system/bin/sh"
-  [ $API -lt 26 ] && DYNLIB=false
-  $DYNLIB && { LIBPATCH="\/vendor"; LIBDIR=$VEN; } || { LIBPATCH="\/system"; LIBDIR=/system; }  
+  echo $PATH | grep -q "^$UF/tools/$ARCH32" || export PATH=$UF/tools/$ARCH32:$PATH
   if $MAGISK; then
-    imageless_magisk && MOUNTEDROOT=$NVBASE/modules/glitchify || MOUNTEDROOT=$MAGISKTMP/img/glitchify
+    imageless_magisk && MOUNTEDROOT=$NVBASE/modules || MOUNTEDROOT=$MAGISKTMP/img
     if $BOOTMODE; then
-      MOD_VER="$MOUNTEDROOT/module.prop"
+      MOD_VER="$MOUNTEDROOT/glitchify/module.prop"
       ORIGDIR="$MAGISKTMP/mirror"
     else
       MOD_VER="$MODPATH/module.prop"
@@ -235,8 +235,17 @@ set_vars() {
     INFO="$MODPATH/glitchify-files"; PROP=$MODPATH/system.prop; UNITY="$MODPATH"
     local ROOTTYPE="MagiskSU"
   fi
+  if $SYSTEM_ROOT && [ ! -L /system/vendor ]; then
+    ORIGVEN=$ORIGDIR/system_root/system/vendor
+  else
+    ORIGVEN=$ORIGDIR/vendor
+  fi
+  SYS=/system; VEN=/system/vendor; RD=$UF/boot/ramdisk; INFORD="$RD/glitchify-files"; SHEBANG="#!/system/bin/sh"
+  [ $API -lt 26 ] && DYNLIB=false
+  $DYNLIB && { LIBPATCH="\/vendor"; LIBDIR=$VEN; } || { LIBPATCH="\/system"; LIBDIR=/system; }  
   if ! $MAGISK || $SYSOVER; then
-    UNITY=""; INFO=/system/etc/glitchify-files
+    UNITY=""
+    [ -d /system/addon.d ] && INFO=/system/addon.d/glitchify-files || INFO=/system/etc/glitchify-files
     [ -L /system/vendor ] && { VEN=/vendor; $BOOTMODE && ORIGVEN=$ORIGDIR/vendor; }
     if ! $MAGISK; then
       # Determine system boot script type
@@ -247,12 +256,12 @@ set_vars() {
       elif [ -e "$(find /data /cache -name supersu_is_here | head -n1)" ]; then
         SHEBANG="#!/su/bin/sush"; ROOTTYPE="Systemless SuperSU"
         NVBASE=$(dirname `find /data /cache -name supersu_is_here | head -n1` 2>/dev/null)/su.d
-      elif [ -d /system/su ] || [ -f /system/xbin/daemonsu ] || [ -f /system/xbin/sugote ] || [ -f /system/xbin/su ]; then
+      elif [ -d /system/su ] || [ -f /system/xbin/daemonsu ] || [ -f /system/xbin/sugote ]; then
         NVBASE=/system/su.d; ROOTTYPE="System SuperSU"
       elif [ -f /system/xbin/su ]; then
         [ "$(grep "SuperSU" /system/xbin/su)" ] && { NVBASE=/system/su.d; ROOTTYPE="System SuperSU"; } || ROOTTYPE="LineageOS SU"
       fi
-      PROP=$NVBASE/glitchify-props.sh
+      PROP=$NVBASE/glitchify-props
     fi
   fi
   ui_print "- $ROOTTYPE detected"
@@ -285,28 +294,6 @@ mktouch() {
   chmod 644 $1
 }
 
-run_addons() {
-  local OPT=`getopt -o mhiuv -- "$@"` NAME PNAME
-  eval set -- "$OPT"
-  while true; do
-    case "$1" in
-      -m) NAME=main; shift;;
-      -h) NAME=preinstall; PNAME="Preinstall"; shift;;
-      -i) NAME=install; PNAME="Install"; shift;;
-      -u) NAME=uninstall; PNAME="Uninstall"; shift;;
-      -v) NAME=postuninstall; PNAME="Postuninstall"; shift;;
-      --) shift; break;;
-    esac
-  done
-  if [ "$(ls -A $TMPDIR/addon/*/$NAME.sh 2>/dev/null)" ]; then
-    [ -z $PNAME ] || { ui_print " "; ui_print "- Running $PNAME Addons -"; }
-    for i in $TMPDIR/addon/*/$NAME.sh; do
-      ui_print "  Running $(echo $i | sed -r "s|$TMPDIR/addon/(.*)/$NAME.sh|\1|")..."
-      . $i
-    done
-    [ -z $PNAME ] || { ui_print " "; ui_print "- `echo $PNAME`ing (cont) -"; }
-  fi
-}
 
 cp_ch() {
   local OPT=`getopt -o inr -- "$@"` BAK=true UBAK=true REST=true BAKFILE=$INFO FOL=false
@@ -354,19 +341,6 @@ cp_ch() {
       */system/*) chcon u:object_r:system_file:s0 $FILE;;
     esac
   done
-}
-
-patch_script() {
-  [ -L /system/vendor ] && local VEN=/vendor
-  sed -i -e "1i $SHEBANG" -e "1i SYS=$ROOT/system" -e "1i VEN=$ROOT$VEN" $1
-  for i in "ROOT" "MAGISK" "LIBDIR" "SYSOVER" "MODID" "MOUNTEDROOT" "NVBASE"; do
-    sed -i "4i $i=$(eval echo \$$i)" $1
-  done
-  if $MAGISK; then
-    sed -i -e "s|\$MODPATH|$MOUNTEDROOT|g" -e "s|\$MOUNTPATH|$(basename $MOUNTEDROOT)|g" -e "s|\$MODULEROOT|$(basename $MOUNTEDROOT)|g" -e "11i INFO=$MOUNTEDROOT/glitchify-files" $1
-  else
-    sed -i -e "s|\$MODPATH||g" -e "s|\$MOUNTPATH||g" -e "s|\$MODULEROOT||g" -e "11i INFO=$INFO" $1
-  fi
 }
 
 install_script() {
@@ -428,6 +402,7 @@ uninstall_files() {
 }
 
 center_and_print() {
+  ui_print " "
   local NEW CHARS SPACES
   ui_print "    *******************************************"
   for i in name version author; do
@@ -456,10 +431,7 @@ center_and_print() {
 #######
 
 unity_install() {
-  ui_print "• Installing"
-
-  # Preinstall Addons
-  run_addons -h
+  ui_print "- Installing"
 
   # Make info file
   rm -f $INFO
@@ -467,9 +439,6 @@ unity_install() {
 
   # Run user install script
   [ -f "$TMPDIR/common/unity_install.sh" ] && . $TMPDIR/common/unity_install.sh
-  
-  # Install Addons
-  run_addons -i
   
   # Check sizes in case compression was used anywhere in zip
   if $MAGISK && ! $SYSOVER; then
@@ -487,11 +456,27 @@ unity_install() {
   fi
   
   # Remove comments from files
-  for i in $TMPDIR/common/system.prop $TMPDIR/common/service.sh; do
+  for i in $TMPDIR/common/sepolicy.sh $TMPDIR/common/system.prop $TMPDIR/common/service.sh $TMPDIR/common/post-fs-data.sh; do
     [ -f $i ] && sed -i -e "/^#/d" -e "/^ *$/d" $i
   done
   
-  ui_print " • Installing scripts and files..."
+  # Sepolicy
+  $DIRSEPOL && [ ! -d $TMPDIR/addon/Ramdisk-Patcher ] && { ui_print "   ! Ramdisk-Patcher required but not found!"; ui_print "   ! It's required for direct sepolicy patching"; ui_print "   ! Will use boot script instead"; DIRSEPOL=false; }
+  
+  if ! $DIRSEPOL && [ -s $TMPDIR/common/sepolicy.sh ]; then
+    [ "$NVBASE" == "/system/etc/init.d" -o "$MAGISK" == "true" ] && echo -n "magiskpolicy --live" >> $TMPDIR/common/service.sh || echo -n "supolicy --live" >> $TMPDIR/common/service.sh
+    sed -i -e '/^#.*/d' -e '/^$/d' $TMPDIR/common/sepolicy.sh
+    while read LINE; do
+      case $LINE in
+        \"*\") echo -n " $LINE" >> $TMPDIR/common/service.sh;;
+        \"*) echo -n " $LINE\"" >> $TMPDIR/common/service.sh;;
+        *\") echo -n " \"$LINE" >> $TMPDIR/common/service.sh;;
+        *) echo -n " \"$LINE\"" >> $TMPDIR/common/service.sh;;
+      esac
+    done < $TMPDIR/common/sepolicy.sh
+  fi
+
+  ui_print "   Installing scripts and files for $ARCH SDK $API device..."
   
   # Custom uninstaller
   $MAGISK && [ -f $TMPDIR/uninstall.sh ] && install_script $TMPDIR/uninstall.sh $MODPATH/uninstall.sh
@@ -503,6 +488,9 @@ unity_install() {
 
   # Prop files
   [ -s $TMPDIR/common/system.prop ] && { prop_process $TMPDIR/common/system.prop; $MAGISK || echo $PROP >> $INFO; }
+
+  #Install post-fs-data mode scripts
+  [ -s $TMPDIR/common/post-fs-data.sh ] && install_script -p $TMPDIR/common/post-fs-data.sh
 
   # Service mode scripts
   [ -s $TMPDIR/common/service.sh ] && install_script -l $TMPDIR/common/service.sh
@@ -517,7 +505,14 @@ unity_install() {
       mv -f $TMPDIR/system/$FILE $TMPDIR/system/vendor/$FILE
     done
   fi
+  rm -f $TMPDIR/system/placeholder
   cp_ch -r $TMPDIR/system $UNITY/system
+  # Install rom backup script
+  if [ "$INFO" == "/system/addon.d/glitchify-files" ]; then
+    ui_print "   Installing addon.d backup script..."
+    sed -i "s/MODID=.*/MODID=glitchify/" $TMPDIR/common/unityfiles/addon.sh
+    cp_ch -n $TMPDIR/common/unityfiles/addon.sh $UNITY/system/addon.d/98-glitchify-unity.sh 0755
+  fi
   
   # Install scripts and module info
   cp_ch -n $TMPDIR/module.prop $MOD_VER
@@ -534,12 +529,11 @@ unity_install() {
     fi
     cp -af $TMPDIR/module.prop $MODPATH/module.prop
     # Update info for magisk manager
-    $BOOTMODE && { rm -f $MOUNTEDROOT/remove; mktouch $MOUNTEDROOT/update; cp_ch -n $TMPDIR/module.prop $MOUNTEDROOT/module.prop; }
-  elif [ "$NVBASE" == "/system/etc/init.d" ]; then
+    $BOOTMODE && { rm -f $MOUNTEDROOT/glitchify/remove; mktouch $MOUNTEDROOT/glitchify/update; cp_ch -n $TMPDIR/module.prop $MOUNTEDROOT/glitchify/module.prop; }
+  elif [ "$NVBASE" == "/system/etc/init.d" ] && [ "$(ls -A $NVBASE/glitchify* 2>/dev/null)" ]; then
     ui_print " "
     ui_print "   ! This root method has no boot script support !"
     ui_print "   ! You will need to add init.d support !"
-    ui_print " "
   fi
 
   # Add blank line to end of all prop/script files if not already present
@@ -559,7 +553,7 @@ unity_install() {
 
 unity_uninstall() {
   ui_print " "
-  ui_print "• Uninstalling"
+  ui_print "- Uninstalling"
   
   # Uninstall Addons
   run_addons -u
@@ -570,7 +564,7 @@ unity_uninstall() {
   if $MAGISK; then
     rm -rf $MODPATH
     if $BOOTMODE; then
-      [ -d $MOUNTEDROOT/system ] && touch $MOUNTEDROOT/remove || rm -rf $MOUNTEDROOT
+      [ -d $MOUNTEDROOT/glitchify/system ] && touch $MOUNTEDROOT/glitchify/remove || rm -rf $MOUNTEDROOT/glitchify
     fi
   fi
 
@@ -581,7 +575,7 @@ unity_uninstall() {
   run_addons -v
 
   ui_print " "
-  ui_print "• Completing uninstall -"
+  ui_print "- Completing uninstall -"
 }
 
 comp_check() {
@@ -597,6 +591,7 @@ comp_check() {
     MAGISK=true
     [ $MAGISK_VER_CODE -lt 18000 ] && require_new_magisk
     $SYSOVER && $BOOTMODE && { ui_print "   ! Magisk manager isn't supported!"; abort "   ! Install in recovery !"; }
+    $SYSOVER && { mount -o rw,remount /system; [ -L /system/vendor ] && mount -o rw,remount /vendor; }
   fi
 }
 
@@ -609,35 +604,25 @@ unity_main() {
     [ "$(tail -1 "$i")" ] && echo "" >> "$i"
   done
 
-  # Main addons
-  [ -f "$TMPDIR/addon.tar.xz" ] && tar -xf $TMPDIR/addon.tar.xz -C $TMPDIR 2>/dev/null
-  run_addons -m
-  
   # Load user vars/function
   unity_custom
   
   # Determine mod installation status
   ui_print " "
-  if [ -d "$RD" ] && [ "$(grep "#$MODID-UnityIndicator" $RD/init.rc 2>/dev/null)" ] && [ ! -f "$MOD_VER" ]; then
-    ui_print "  ! Mod present in ramdisk but not in system!"
-    ui_print "  ! Ramdisk modifications will be uninstalled!"
-    . $TMPDIR/addon/Ramdisk-Patcher/uninstall.sh
-  elif $MAGISK && ! $SYSOVER && [ -f "/system/etc/glitchify-files" ]; then
+  if $MAGISK && ! $SYSOVER && [ -f "/system/addon.d/glitchify-files" -o -f "/system/etc/glitchify-files" ]; then
     ui_print "  ! Previous system override install detected!"
     ui_print "  ! Removing...!"
     $BOOTMODE && { ui_print "  ! Magisk manager isn't supported!"; abort "   ! Flash in TWRP !"; }
-    unity_upgrade -s
   elif [ -f "$MOD_VER" ]; then
-    if [ -d "$RD" ] && [ ! "$(grep "#$MODID-UnityIndicator" $RD/init.rc 2>/dev/null)" ]; then
+    if [ -d "$RD" ] && [ ! "$(grep "#glitchify-UnityIndicator" $RD/init.rc 2>/dev/null)" ]; then
       ui_print "  ! Mod present in system but not in ramdisk!"
       ui_print "  ! Running upgrade..."
-      unity_upgrade
     elif [ $(grep_prop versionCode $MOD_VER) -ge $(grep_prop versionCode $TMPDIR/module.prop) ]; then
       ui_print "  ! Current or newer version detected!"
       unity_uninstall
     else
-      ui_print "  ! Older version detected! Upgrading..."
-      unity_upgrade
+      ui_print "  ! Older version detected, removing..."
+	  unity_uninstall
     fi
   else
     unity_install
@@ -647,10 +632,9 @@ unity_main() {
   cleanup
 }
 
-SKIPMOUNT=false; SYSOVER=false; DEBUG=false; DYNLIB=false; SEPOLICY=false
+SKIPMOUNT=false; SYSOVER=false; DEBUG=false; DYNLIB=false; SEPOLICY=false; DIRSEPOL=false
 OIFS=$IFS; IFS=\|; 
 case $(echo $(basename "$ZIPFILE") | tr '[:upper:]' '[:lower:]') in
-  *debug*) DEBUG=true;;
   *sysover*) SYSOVER=true;;
 esac
 IFS=$OIFS
@@ -665,4 +649,3 @@ ui_print " "
 ui_print "Unzipping files..."
 unzip -oq "$ZIPFILE" -d $TMPDIR 2>/dev/null
 chmod -R 755 $UF/tools
-[ "$(grep_prop id $TMPDIR/module.prop)" == "UnityTemplate" ] && { ui_print "! Unity Template is not a separate module !"; abort "! This template is for devs only !"; }

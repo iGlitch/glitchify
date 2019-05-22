@@ -1,7 +1,10 @@
-$SYSOVER && { mount -o rw,remount /system; [ -L /system/vendor ] && mount -o rw,remount /vendor; }
+if $SYSOVER || $DIRSEPOL; then
+  rm -f $INFO; mount -o rw,remount /system
+  [ -L /system/vendor ] && mount -o rw,remount /vendor
+fi
 
 FILE=$INFO
-[ -f $MODPATH/glitchify-files ] && FILE=$MODPATH/glitchify-files
+[ -f $MODPATH/$MODID-files ] && FILE=$MODPATH/$MODID-files
 if [ -f $FILE ]; then
   while read LINE; do
     if [ "$(echo -n $LINE | tail -c 1)" == "~" ] || [ "$(echo -n $LINE | tail -c 9)" == "NORESTORE" ]; then
@@ -18,4 +21,7 @@ if [ -f $FILE ]; then
   done < $FILE
 fi
 
-$SYSOVER && { rm -f $INFO; mount -o ro,remount /system; [ -L /system/vendor ] && mount -o ro,remount /vendor; }
+if $SYSOVER || $DIRSEPOL; then
+  rm -f $INFO; mount -o ro,remount /system
+  [ -L /system/vendor ] && mount -o ro,remount /vendor
+fi
