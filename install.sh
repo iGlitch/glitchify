@@ -1,4 +1,8 @@
 # Unity Config Script
+SKIPMOUNT=false
+PROPFILE=true
+#POSTFSDATA=false
+LATESTARTSERVICE=true
 
 if [ -z $UF ]; then
   UF=$TMPDIR/common/unityfiles
