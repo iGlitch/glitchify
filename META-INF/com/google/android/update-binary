@@ -132,6 +132,9 @@ if $BOOTMODE; then
   fi
 fi
 
+# service mode scripts
+$LATESTARTSERVICE && cp -af $TMPDIR/service.sh $MODPATH/service.sh
+
 # Handle replace folders
 for TARGET in $REPLACE; do
   mktouch $MODPATH$TARGET/.replace
