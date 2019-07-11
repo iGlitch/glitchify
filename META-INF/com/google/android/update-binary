@@ -85,8 +85,8 @@ else
   MODULEROOT=$MOUNTPATH
 fi
 
-MODID="glitchify"
-MODPATH=$MODULEROOT/glitchify
+MODID=`grep_prop id $TMPDIR/module.prop`
+MODPATH=$MODULEROOT/$MODID
 
 print_modname
 

@@ -1,9 +1,4 @@
 # Unity (Un)Install Utility Functions
-
-#
-# Magisk util_functions is still used and will override any listed here
-# They're present for system installs
-
 ###################
 # Helper Functions
 ###################

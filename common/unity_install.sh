@@ -73,32 +73,43 @@ device="$(getprop ro.product.device)"
 if [ $device == "sailfish" ] || [ $device == "marlin" ]; then
     kernelver=$(uname -a)
 	case "$kernelver" in  *KingKernel* | *Kirisakura* | *exNoShadez*)
-	  ui_print " "; ui_print "You are using a compatible kernel and on Pixel, alright! Installing..."
-	  cat $TMPDIR/common/pixel/glitchify.sh >> $TMPDIR/common/service.sh
-	  rm -rf $TMPDIR/common/pixel
-	  rm -rf $TMPDIR/common/pixel2
-          rm -rf $TMPDIR/common/pixel3
+	 ui_print " "; ui_print "You are using a compatible kernel and on Pixel, alright! Installing..."
+	 cat $TMPDIR/common/pixel/glitchify.sh >> $TMPDIR/common/service.sh
+	 rm -rf $TMPDIR/common/pixel
+	 rm -rf $TMPDIR/common/pixel2
+     rm -rf $TMPDIR/common/pixel3
+	 rm -rf $TMPDIR/common/pixel3a
 		  ;;
       *)
-  	  ui_print " "; ui_print "You are using a Pixel, alright! Installing..."
-	  cat $TMPDIR/common/pixel/bm.sh >> $TMPDIR/common/service.sh
-	  rm -rf $TMPDIR/common/pixel
-	  rm -rf $TMPDIR/common/pixel2
-          rm -rf $TMPDIR/common/pixel3
+  	 ui_print " "; ui_print "You are using a Pixel, alright! Installing..."
+	 cat $TMPDIR/common/pixel/bm.sh >> $TMPDIR/common/service.sh
+	 rm -rf $TMPDIR/common/pixel
+	 rm -rf $TMPDIR/common/pixel2
+     rm -rf $TMPDIR/common/pixel3
+	 rm -rf $TMPDIR/common/pixel3a
 		  ;;
 	esac
 elif [ $device == "walleye" ] || [ $device == "taimen" ] ; then
     ui_print "You are using a Pixel 2, alright! Installing..."
-	 cat $TMPDIR/common/pixel2/bm.sh >> $TMPDIR/common/service.sh
-	 rm -rf $TMPDIR/common/pixel
-	 rm -rf $TMPDIR/common/pixel2
-         rm -rf $TMPDIR/common/pixel3
+	cat $TMPDIR/common/pixel2/bm.sh >> $TMPDIR/common/service.sh
+	rm -rf $TMPDIR/common/pixel
+	rm -rf $TMPDIR/common/pixel2
+    rm -rf $TMPDIR/common/pixel3
+	rm -rf $TMPDIR/common/pixel3a
 elif [ $device == "crosshatch" ] || [ $device == "blueline" ] ; then
     ui_print "You are using a Pixel 3, alright! Installing..."
     cat $TMPDIR/common/pixel3/bm.sh >> $TMPDIR/common/service.sh
-    	rm -rf $TMPDIR/common/pixel
-    	rm -rf $TMPDIR/common/pixel2
-    	rm -rf $TMPDIR/common/pixel3
+    rm -rf $TMPDIR/common/pixel
+    rm -rf $TMPDIR/common/pixel2
+    rm -rf $TMPDIR/common/pixel3
+	rm -rf $TMPDIR/common/pixel3a
+elif [ $device == "bonito" ] || [ $device == "sargo" ] ; then
+    ui_print "You are using a Pixel 3a, alright! Installing..."
+    cat $TMPDIR/common/pixel3a/bm.sh >> $TMPDIR/common/service.sh
+    rm -rf $TMPDIR/common/pixel
+    rm -rf $TMPDIR/common/pixel2
+    rm -rf $TMPDIR/common/pixel3
+	rm -rf $TMPDIR/common/pixel3a	
 else
 	ui_print "You are not on a Google Pixel series device! Aborting, please do not try to cheat..."
 	exit

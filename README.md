@@ -3,11 +3,11 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.3-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Apr%2016%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.4-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Jul%2012%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
-Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increases battery life while keeping the wonderful performance of the Google Pixel Android phones.  I (Glitch) only own a Google Pixel (sailfish) phone, and I do not know or support using this on phones outside of the Pixel series.
+Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increases battery life while keeping the wonderful performance of the Google Pixel Android phones.  I only own a Google Pixel (sailfish) phone so don't bother me for issues on other devices please.
 
 ## Features
 - Sets *schedutil* CPU governer by default (if it exists in the kernel)
@@ -50,8 +50,15 @@ Google Pixel 2 (walleye)
 Google Pixel 2 XL (taimen)
 Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
+Google Pixel 3 (sargo)
+Google Pixel 3a XL (bonito)
 ```
 ## Changelog
+### v1.4 (2019/07/12)
+- Add support for Pixel 3a/XL
+- Updated props from FDE
+- Bit of cleanup for smaller zip size
+
 ### v1.3 (2019/03/30)
 - Updated to latest unity template
 - Updated BM mount script
@@ -83,7 +90,7 @@ Glitchify modifies things from the `kernel` level. **This is only tested on Goog
 Thanks goes to those wonderful people
 - [Unity template](https://github.com/Zackptg5/Unity)
 - [Magisk](https://github.com/topjohnwu/Magisk)
-- xFireFly93, gloeyisk, simonsmh, korom42
+- xFireFly93, gloeyisk, simonsmh, korom42, feravolt
 - Authors of kernels with schedutil additions.
 
 <p align="center">
