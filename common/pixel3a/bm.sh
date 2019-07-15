@@ -1,9 +1,9 @@
 #!/system/bin/sh
 
-# BM 1.2
+# BM1.3
 
 # Pause script execution a little for Magisk Boot Service;
-sleep 69;
+sleep 90;
 
 # A few strictly, and carefully, selected filesystem mounting tweaks and enhancements for better system performance;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /;
@@ -13,10 +13,11 @@ busybox mount -o remount,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,disc
 
 # Modify the default CPUSet values so the workload is being spread out across more cores for increased power efficiency;
 echo "0-3" > /dev/cpuset/background/cpus
-echo "0-5" > /dev/cpuset/restricted/cpus
+echo "0-5" > /dev/cpuset/foreground/cpus
+echo "0-3" > /dev/cpuset/restricted/cpus
 echo "0-5" > /dev/cpuset/system-background/cpus
 
-# FS tweaks for slightly better userspace performance;
+# FS tweaks for a slightly better userspace performance;
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
@@ -26,7 +27,7 @@ echo "0 0 0 0" > /proc/sys/kernel/printk
 # Disable sched_stats for a minor overhead reduction;
 echo "0" > /proc/sys/kernel/sched_schedstats
 
-# A couple network tweaks for achieving slightly reduced amount of battery consumption when being "actively" connected to either a wifi connection or mobile data;
+# A few crucial network tweaks for overall faster "network connectivity performance" and for slightly reduced battery consumption when being "actively" connected on-the-go;
 echo "0" > /proc/sys/net/core/netdev_tstamp_prequeue
 echo "0" > /proc/sys/net/ipv4/cipso_cache_bucket_size
 echo "0" > /proc/sys/net/ipv4/cipso_cache_enable
@@ -39,7 +40,7 @@ echo "0" > /proc/sys/net/ipv4/tcp_slow_start_after_idle
 echo "0" > /proc/sys/net/ipv6/calipso_cache_bucket_size
 echo "0" > /proc/sys/net/ipv6/calipso_cache_enable
 
-# A few virtual memory tweaks for improved battery life while boosting overall needed system performance;
+# A few minor virtual memory enhancing tweaks for improved battery life while boosting overall needed system performance;
 echo "500" > /proc/sys/vm/dirty_expire_centisecs
 echo "3000" > /proc/sys/vm/dirty_writeback_centisecs
 echo "0" > /proc/sys/vm/oom_dump_tasks
@@ -51,7 +52,7 @@ echo "0" > /proc/sys/vm/swap_ratio
 echo "0" > /sys/android_touch/vib_strength
 echo "0" > /sys/android_touch/wake_vibrate
 
-# Wide block based tuning for reduced lag and less possible amount of general IO scheduling based overhead (Thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You really rock, dude!);
+# Wide block based tuning for reduced lag as well as jank and less possible amount of general IO scheduling based system overhead (A lot of thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You rock, dude!);
 for i in /sys/block/*/queue; do
   echo "0" > $i/add_random;
   echo "0" > $i/io_poll;
@@ -64,18 +65,18 @@ for i in /sys/block/*/queue; do
   echo "write back" > $i/write_cache;
 done;
 
-# Disable frequency throttling of the Adreno GPU circuits;
+# Disable frequency scaling throttling of the Adreno GPU circuits;
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
 
 # Enable and adjust Boeffla kernel wakelock blocker for a slight possible reduction in overall idle battery consumption / drain;
 echo "qcom_rx_wakelock;wlan;wlan_wow_wl;wlan_extscan_wl;netmgr_wl;NETLINK;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
 
-# Tweak and decrease tx_queue_len default stock value(s) for less amount of generated bufferbloat and for gaining slightly faster network speed and performance;
+# Decrease tx_queue_len default stock value(s) for less amount of  bufferbloat and for slightly faster network speed in the long run;
 for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
 
-# Disable some minor and overall expensive CPU related logging for a possible workload overhead reduction (experimental);
+# Disable a few completely useless CPU loggers;
 echo "0" > /sys/devices/system/edac/cpu/log_ce
 echo "0" > /sys/devices/system/edac/cpu/log_ue
 
@@ -92,6 +93,11 @@ echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
 # Use RCU_normal instead of RCU_expedited for improved real-time latency, CPU utilization and energy efficiency;
 echo "0" > /sys/kernel/rcu_expedited
 echo "1" > /sys/kernel/rcu_normal
+
+# Enable the idle state for all CPU cores for potentially lower battery drain and reduced power consumption per each percent;
+for i in $(find /sys/module/lpm_levels/L3 -name idle_enabled); do
+echo "Y" > $i;
+done
 
 # Fully disable a lot of various miscellaneous kernel based modules for hopefully overall reduced system overhead;
 echo "0" > /sys/module/binder/parameters/debug_mask
@@ -125,6 +131,7 @@ echo "N" > /sys/module/sit/parameters/log_ecn_error
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
 # echo "N" > /sys/module/sync/parameters/fsync_enabled
 echo "0" > /sys/module/usb_bam/parameters/enable_event_log
+echo "Y" > /sys/module/workqueue/parameters/power_efficient
 
 fstrim /data;
 fstrim /cache;
