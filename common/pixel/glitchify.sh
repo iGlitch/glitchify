@@ -1,7 +1,8 @@
 #!/system/bin/sh
 
 #Glitchify kernel tuner
-sleep 20;
+sleep 22;
+
 # Disable sysctl.conf to prevent ROM interference #1
 if [ -e /system/etc/sysctl.conf ]; then
   mount -o remount,rw /system;
@@ -10,19 +11,55 @@ if [ -e /system/etc/sysctl.conf ]; then
 fi;
 
 # Filesystem tweaks for better system performance;
-busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /;
-busybox mount -o remount,nosuid,nodev,noatime,barrier=0,noauto_da_alloc,commit=96,discard -t auto /data;
-busybox mount -o remount,nosuid,nodev,noatime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /sys;
-busybox mount -o remount,nodev,noatime,no_block_validity,nodelalloc,barrier=0,data=writeback,nobh,journal_async_commit,noauto_da_alloc,commit=96,discard -t auto /system;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /sys;
+busybox mount -o remount,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Disable / stop system logging (logd) daemon;
 stop logd
 
-# Remove Find My Device and other Google stuff for enabling GMS Doze;
-#pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver;
+# Doze setup services (experimental)
 pm disable com.google.android.gms/.update.SystemUpdateActivity 
-pm disable com.google.android.gms/.update.SystemUpdateService
+pm disable com.google.android.gms/.update.SystemUpdateService 
+pm disable com.google.android.gms/.update.SystemUpdateService$ActiveReceiver 
+pm disable com.google.android.gms/.update.SystemUpdateService$Receiver 
+pm disable com.google.android.gms/.update.SystemUpdateService$SecretCodeReceiver 
+pm disable com.google.android.gsf/.update.SystemUpdateActivity 
+pm disable com.google.android.gsf/.update.SystemUpdatePanoActivity 
+pm disable com.google.android.gsf/.update.SystemUpdateService 
+pm disable com.google.android.gsf/.update.SystemUpdateService$Receiver 
+pm disable com.google.android.gsf/.update.SystemUpdateService$SecretCodeReceiver
+
+#GMS Doze Test
+# Stop certain services and restart it on boot (experimental)
+if [ "$(busybox pidof com.qualcomm.qcrilmsgtunnel.QcrilMsgTunnelService | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox com.qualcomm.qcrilmsgtunnel.QcrilMsgTunnelService);
+fi;
+if [ "$(busybox pidof com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver);
+fi;
+if [ "$(busybox pidof com.google.android.gms | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms);
+fi;
+if [ "$(busybox pidof com.google.android.gms.unstable | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.unstable);
+fi;
+if [ "$(busybox pidof com.google.android.gms.persistent | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.persistent);
+fi;
+if [ "$(busybox pidof com.google.android.gms.wearable | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.wearable);
+fi;
+if [ "$(busybox pidof com.google.android.gms.backup.backupTransportService | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.backup.backupTransportService);
+fi;
+if [ "$(busybox pidof com.google.android.gms.lockbox.LockboxService | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.lockbox.LockboxService);
+fi;
+if [ "$(busybox pidof com.google.android.gms.auth.setup.devicesignals.LockScreenService | wc -l)" -eq "1" ]; then
+	busybox kill $(busybox pidof com.google.android.gms.auth.setup.devicesignals.LockScreenService);
+fi;
 
 # Doze battery life profile;
 settings put global device_idle_constants light_after_inactive_to=5000,light_pre_idle_to=10000,light_max_idle_to=86400000,light_idle_to=43200000,light_idle_maintenance_max_budget=20000,light_idle_maintenance_min_budget=5000,min_time_to_alarm=60000,inactive_to=120000,motion_inactive_to=120000,idle_after_inactive_to=5000,locating_to=2000,sensing_to=120000,idle_to=7200000,wait_for_unlock=true
@@ -250,7 +287,7 @@ echo "175" > /sys/class/leds/led:switch/max_brightness
 echo "175" > /sys/class/leds/red/max_brightness
 
 if [ -e "/sys/module/xhci_hcd/parameters/wl_divide" ]; then
-write /sys/module/xhci_hcd/parameters/wl_divide "N"
+echo "N" > /sys/module/xhci_hcd/parameters/wl_divide
 fi
 # Enable a tuned Boeffla wakelock blocker at boot for both better active & idle battery life;
 #echo "enable_wlan_ws;enable_wlan_wow_wl_ws;enable_wlan_extscan_wl_ws;enable_timerfd_ws;enable_qcom_rx_wakelock_ws;enable_netmgr_wl_ws;enable_netlink_ws;enable_ipa_ws;tftp_server_wakelock;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
