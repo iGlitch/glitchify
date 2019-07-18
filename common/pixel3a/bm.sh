@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-# BM1.3
+# BM 1.4
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 90;
@@ -9,7 +9,7 @@ sleep 90;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /sys;
-busybox mount -o remount,nodev,noatime,nodiratime,barrier=0,noauto_da_alloc,discard -t auto /system;
+busybox mount -o remount,nodev,noatime,nodiratime,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Modify the default CPUSet values so the workload is being spread out across more cores for increased power efficiency;
 echo "0-3" > /dev/cpuset/background/cpus
@@ -94,11 +94,6 @@ echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
 echo "0" > /sys/kernel/rcu_expedited
 echo "1" > /sys/kernel/rcu_normal
 
-# Enable the idle state for all CPU cores for potentially lower battery drain and reduced power consumption per each percent;
-for i in $(find /sys/module/lpm_levels/L3 -name idle_enabled); do
-echo "Y" > $i;
-done
-
 # Fully disable a lot of various miscellaneous kernel based modules for hopefully overall reduced system overhead;
 echo "0" > /sys/module/binder/parameters/debug_mask
 echo "Y" > /sys/module/bluetooth/parameters/disable_ertm
@@ -149,5 +144,4 @@ else
   echo "Glitchify was unsuccessful... try again!" >> /storage/emulated/0/logs/glitchify.log
   exit 1
 fi
-
 #done
