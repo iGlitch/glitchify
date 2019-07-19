@@ -50,14 +50,13 @@ Google Pixel 2 (walleye)
 Google Pixel 2 XL (taimen)
 Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
-Google Pixel 3 (sargo)
+Google Pixel 3a (sargo)
 Google Pixel 3a XL (bonito)
 ```
 ## Changelog
 ### v1.4 (2019/07/12)
-- Add support for Pixel 3a/XL
+- Add support for Pixel 3a
 - Updated props from FDE
-- Bit of cleanup for smaller zip size
 
 ### v1.3 (2019/03/30)
 - Updated to latest unity template
