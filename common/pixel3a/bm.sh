@@ -1,14 +1,14 @@
 #!/system/bin/sh
 
-# BM 1.4
+# BM 1.5
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 90;
 
 # A few strictly, and carefully, selected filesystem mounting tweaks and enhancements for better system performance;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /sys;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /sys;
 busybox mount -o remount,nodev,noatime,nodiratime,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Modify the default CPUSet values so the workload is being spread out across more cores for increased power efficiency;
@@ -17,12 +17,17 @@ echo "0-5" > /dev/cpuset/foreground/cpus
 echo "0-3" > /dev/cpuset/restricted/cpus
 echo "0-5" > /dev/cpuset/system-background/cpus
 
-# FS tweaks for a slightly better userspace performance;
+# FS tweaks for slightly better userspace performance;
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
 
 # Disable printk log spamming to the console;
 echo "0 0 0 0" > /proc/sys/kernel/printk
+
+# For reducing overall power consumption, adjust the kernel task scheduler into lower the total 'allowed' amount of task swapping;
+echo "15000000" > /proc/sys/kernel/sched_latency_ns
+echo "2000000" > /proc/sys/kernel/sched_min_granularity_ns
+echo "10000000" > /proc/sys/kernel/sched_wakeup_granularity_ns
 
 # Disable sched_stats for a minor overhead reduction;
 echo "0" > /proc/sys/kernel/sched_schedstats
@@ -76,6 +81,16 @@ for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
 
+# Fully configure the Schedutil governor tunables for better overall performance while attempting to maximize battery life / reducing power consumption usage as far as only possible so you will make it through the whole day without any notable issues;
+
+# LITTLE Cluster;
+echo "1516800" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
+echo "60" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
+
+# Big Cluster;
+echo "1363200" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_freq
+echo "65" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_load
+
 # Disable a few completely useless CPU loggers;
 echo "0" > /sys/devices/system/edac/cpu/log_ce
 echo "0" > /sys/devices/system/edac/cpu/log_ue
@@ -87,8 +102,11 @@ echo "Y" > /sys/kernel/debug/dsi_sofef00_sdc_1080p_cmd_display/ulps_enable
 # Turn off some pretty useless kernel debugging;
 echo "N" > /sys/kernel/debug/debug_enabled
 
-# Disable Gentle Fair Sleepers for a UI responsivness boost;
+# Disable Gentle_Fair_Sleepers for a UI responsivness boost;
 echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
+
+# Disable RT_Runtime_Share because the performance penalty that is being caused by the risk of the CPU (cores) being unable to service non-realtime based tasks, which is being strictly scheduled on a specific CPU core, is not even worth it at all;
+echo "NO_RT_RUNTIME_SHARE" > /sys/kernel/debug/sched_features
 
 # Use RCU_normal instead of RCU_expedited for improved real-time latency, CPU utilization and energy efficiency;
 echo "0" > /sys/kernel/rcu_expedited
