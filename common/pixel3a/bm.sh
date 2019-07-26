@@ -1,15 +1,15 @@
 #!/system/bin/sh
 
-# BM 1.5
+# BM 1.6
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 90;
 
 # A few strictly, and carefully, selected filesystem mounting tweaks and enhancements for better system performance;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,commit=90,nodiratime,noblock_validity,barrier=0 -t auto /;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /sys;
-busybox mount -o remount,nodev,noatime,nodiratime,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,commit=90,noblock_validity,barrier=0 -t auto /sys;
+busybox mount -o remount,nodev,noatime,nodiratime,commit=90,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # Modify the default CPUSet values so the workload is being spread out across more cores for increased power efficiency;
 echo "0-3" > /dev/cpuset/background/cpus
@@ -73,8 +73,8 @@ done;
 # Disable frequency scaling throttling of the Adreno GPU circuits;
 echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
 
-# Enable and adjust Boeffla kernel wakelock blocker for a slight possible reduction in overall idle battery consumption / drain;
-echo "qcom_rx_wakelock;wlan;wlan_wow_wl;wlan_extscan_wl;netmgr_wl;NETLINK;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
+# Silence the qcom_rx_wakelock kernel wakelock because it's completely worthless and isn't even doing anything useful at all;
+echo "qcom_rx_wakelock;" > /sys/class/misc/boeffla_wakelock_blocker/wakelock_blocker
 
 # Decrease tx_queue_len default stock value(s) for less amount of  bufferbloat and for slightly faster network speed in the long run;
 for i in $(find /sys/class/net -type l); do
@@ -84,12 +84,14 @@ done;
 # Fully configure the Schedutil governor tunables for better overall performance while attempting to maximize battery life / reducing power consumption usage as far as only possible so you will make it through the whole day without any notable issues;
 
 # LITTLE Cluster;
-echo "1516800" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
+echo "1209600" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
 echo "60" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
+echo "444" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
 
 # Big Cluster;
 echo "1363200" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_freq
 echo "65" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_load
+echo "444" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/up_rate_limit_us
 
 # Disable a few completely useless CPU loggers;
 echo "0" > /sys/devices/system/edac/cpu/log_ce
