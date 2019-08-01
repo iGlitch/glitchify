@@ -1,21 +1,15 @@
 #!/system/bin/sh
 
-# BM 1.6
+# BM 1.7
 
 # Pause script execution a little for Magisk Boot Service;
-sleep 90;
+sleep 120;
 
 # A few strictly, and carefully, selected filesystem mounting tweaks and enhancements for better system performance;
-busybox mount -o remount,nosuid,nodev,noatime,commit=90,nodiratime,noblock_validity,barrier=0 -t auto /;
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
-busybox mount -o remount,nosuid,nodev,noatime,nodiratime,commit=90,noblock_validity,barrier=0 -t auto /sys;
-busybox mount -o remount,nodev,noatime,nodiratime,commit=90,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
-
-# Modify the default CPUSet values so the workload is being spread out across more cores for increased power efficiency;
-echo "0-3" > /dev/cpuset/background/cpus
-echo "0-5" > /dev/cpuset/foreground/cpus
-echo "0-3" > /dev/cpuset/restricted/cpus
-echo "0-5" > /dev/cpuset/system-background/cpus
+busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /sys;
+busybox mount -o remount,nodev,noatime,nodiratime,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
 
 # FS tweaks for slightly better userspace performance;
 echo "0" > /proc/sys/fs/dir-notify-enable
@@ -24,26 +18,16 @@ echo "20" > /proc/sys/fs/lease-break-time
 # Disable printk log spamming to the console;
 echo "0 0 0 0" > /proc/sys/kernel/printk
 
+# Disable sched_stats for a minor overhead reduction;
+echo "0" > /proc/sys/kernel/sched_schedstats
+
 # For reducing overall power consumption, adjust the kernel task scheduler into lower the total 'allowed' amount of task swapping;
 echo "15000000" > /proc/sys/kernel/sched_latency_ns
 echo "2000000" > /proc/sys/kernel/sched_min_granularity_ns
 echo "10000000" > /proc/sys/kernel/sched_wakeup_granularity_ns
 
-# Disable sched_stats for a minor overhead reduction;
-echo "0" > /proc/sys/kernel/sched_schedstats
-
-# A few crucial network tweaks for overall faster "network connectivity performance" and for slightly reduced battery consumption when being "actively" connected on-the-go;
-echo "0" > /proc/sys/net/core/netdev_tstamp_prequeue
-echo "0" > /proc/sys/net/ipv4/cipso_cache_bucket_size
-echo "0" > /proc/sys/net/ipv4/cipso_cache_enable
-echo "0" > /proc/sys/net/ipv4/cipso_rbm_strictvalid
-echo "0" > /proc/sys/net/ipv4/igmp_link_local_mcast_reports
+# Use the Westwood TCP congestion control algorithm instead;
 echo "westwood" > /proc/sys/net/ipv4/tcp_congestion_control
-echo "1" > /proc/sys/net/ipv4/tcp_ecn
-echo "1" > /proc/sys/net/ipv4/tcp_no_metrics_save
-echo "0" > /proc/sys/net/ipv4/tcp_slow_start_after_idle
-echo "0" > /proc/sys/net/ipv6/calipso_cache_bucket_size
-echo "0" > /proc/sys/net/ipv6/calipso_cache_enable
 
 # A few minor virtual memory enhancing tweaks for improved battery life while boosting overall needed system performance;
 echo "500" > /proc/sys/vm/dirty_expire_centisecs
@@ -81,21 +65,26 @@ for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
 
-# Fully configure the Schedutil governor tunables for better overall performance while attempting to maximize battery life / reducing power consumption usage as far as only possible so you will make it through the whole day without any notable issues;
+# Allow the performance cluster to rapidly increase it's frequency to a freq step that is between the lowest and highest end of the frequency spectrum for strictly raw performance reasons. But do this by carefully selecting a middle frequency that is conservative high enough for keeping the phone both smooth as well as snappy, but without by any possible means increasing overall power consumption or affecting battery life in a notable way;
+
+# Big cluster;
+echo "1363200" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_freq
+echo "70" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_load
+
+# Now when the "allowed" maximum and minimum freqs have been changed all the way to the bone, then increase the Schedutil up_rate limit for both clusters to 1000us for a slightly reduced amount of "rapid noisy" frequency scaling across the board;
 
 # LITTLE Cluster;
-echo "1209600" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_freq
-echo "60" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/hispeed_load
-echo "444" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
+echo "1000" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
 
-# Big Cluster;
-echo "1363200" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_freq
-echo "65" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_load
-echo "444" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/up_rate_limit_us
+# LITTLE Cluster;
+echo "1000" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/up_rate_limit_us
 
-# Disable a few completely useless CPU loggers;
-echo "0" > /sys/devices/system/edac/cpu/log_ce
-echo "0" > /sys/devices/system/edac/cpu/log_ue
+# Increase the minimum LITTLE cluster freq as a completely needed compensation, from a performance based point of view, for the altered big cluster maximum and minimum frequencies;
+echo "998400" > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq
+
+# Reduce both the minimum as well as the maximum allowed frequencies on the big cluster for overall power saving reasons;
+echo "1747200" > /sys/devices/system/cpu/cpufreq/policy6/scaling_max_freq
+echo "300000" > /sys/devices/system/cpu/cpufreq/policy6/scaling_min_freq
 
 # Enable all of the "built-in" display panel power saving props;
 echo "Y" > /sys/kernel/debug/dsi_sofef00_sdc_1080p_cmd_display/dsi-phy-0_allow_phy_power_off
@@ -146,7 +135,7 @@ echo "N" > /sys/module/sit/parameters/log_ecn_error
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
 # echo "N" > /sys/module/sync/parameters/fsync_enabled
 echo "0" > /sys/module/usb_bam/parameters/enable_event_log
-echo "Y" > /sys/module/workqueue/parameters/power_efficient
+echo "N" > /sys/module/workqueue/parameters/power_efficient
 
 fstrim /data;
 fstrim /cache;
