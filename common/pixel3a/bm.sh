@@ -1,9 +1,9 @@
 #!/system/bin/sh
 
-# BM 1.7
+# BM 1.8
 
 # Pause script execution a little for Magisk Boot Service;
-sleep 120;
+sleep 90;
 
 # A few strictly, and carefully, selected filesystem mounting tweaks and enhancements for better system performance;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /;
@@ -11,47 +11,49 @@ busybox mount -o remount,nosuid,nodev,noatime,nodiratime -t auto /proc;
 busybox mount -o remount,nosuid,nodev,noatime,nodiratime,noblock_validity,barrier=0 -t auto /sys;
 busybox mount -o remount,nodev,noatime,nodiratime,noblock_validity,barrier=0,noauto_da_alloc,discard -t auto /system;
 
-# FS tweaks for slightly better userspace performance;
+# Disable the exception-trace kernel debugger;
+echo "0" > /proc/sys/debug/exception-trace
+
+# Fully disable SCSI kernel logging;
+echo "0" > /proc/sys/dev/scsi/logging_level
+
+# Tweak the FS kernel tunables for better performance;
 echo "0" > /proc/sys/fs/dir-notify-enable
 echo "20" > /proc/sys/fs/lease-break-time
-
-# Disable printk log spamming to the console;
-echo "0 0 0 0" > /proc/sys/kernel/printk
 
 # Disable sched_stats for a minor overhead reduction;
 echo "0" > /proc/sys/kernel/sched_schedstats
 
-# For reducing overall power consumption, adjust the kernel task scheduler into lower the total 'allowed' amount of task swapping;
+# For reducing power consumption, then slightly reduce the total amount of "allowed" task swapping at the task scheduler level;
 echo "15000000" > /proc/sys/kernel/sched_latency_ns
 echo "2000000" > /proc/sys/kernel/sched_min_granularity_ns
 echo "10000000" > /proc/sys/kernel/sched_wakeup_granularity_ns
 
-# Use the Westwood TCP congestion control algorithm instead;
+# Use the Westwood TCP congestion control algorithm;
 echo "westwood" > /proc/sys/net/ipv4/tcp_congestion_control
 
-# A few minor virtual memory enhancing tweaks for improved battery life while boosting overall needed system performance;
+# Virtual Memory enhancements for better battery life;
 echo "500" > /proc/sys/vm/dirty_expire_centisecs
 echo "3000" > /proc/sys/vm/dirty_writeback_centisecs
+echo "5" > /proc/sys/vm/laptop_mode
 echo "0" > /proc/sys/vm/oom_dump_tasks
 echo "1" > /proc/sys/vm/oom_kill_allocating_task
 echo "1200" > /proc/sys/vm/stat_interval
 echo "0" > /proc/sys/vm/swap_ratio
 
-# Disable a few useless screen wakeup methods / alternatives:
+# Disable some useless touch screen interaction bloat;
 echo "0" > /sys/android_touch/vib_strength
 echo "0" > /sys/android_touch/wake_vibrate
 
-# Wide block based tuning for reduced lag as well as jank and less possible amount of general IO scheduling based system overhead (A lot of thanks to pkgnex @ XDA for the more than pretty much simplified version of this tweak. You rock, dude!);
+# Wide I/O block tuning for a reduced amount of lag and hiccups; 
 for i in /sys/block/*/queue; do
   echo "0" > $i/add_random;
-  echo "0" > $i/io_poll;
   echo "0" > $i/iostats;
   echo "0" > $i/nomerges;
   echo "128" > $i/read_ahead_kb;
   echo "0" > $i/rotational;
   echo "1" > $i/rq_affinity;
   echo "cfq" > $i/scheduler;
-  echo "write back" > $i/write_cache;
 done;
 
 # Disable frequency scaling throttling of the Adreno GPU circuits;
@@ -65,27 +67,6 @@ for i in $(find /sys/class/net -type l); do
   echo "128" > $i/tx_queue_len;
 done;
 
-# Allow the performance cluster to rapidly increase it's frequency to a freq step that is between the lowest and highest end of the frequency spectrum for strictly raw performance reasons. But do this by carefully selecting a middle frequency that is conservative high enough for keeping the phone both smooth as well as snappy, but without by any possible means increasing overall power consumption or affecting battery life in a notable way;
-
-# Big cluster;
-echo "1363200" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_freq
-echo "70" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/hispeed_load
-
-# Now when the "allowed" maximum and minimum freqs have been changed all the way to the bone, then increase the Schedutil up_rate limit for both clusters to 1000us for a slightly reduced amount of "rapid noisy" frequency scaling across the board;
-
-# LITTLE Cluster;
-echo "1000" > /sys/devices/system/cpu/cpufreq/policy0/schedutil/up_rate_limit_us
-
-# LITTLE Cluster;
-echo "1000" > /sys/devices/system/cpu/cpufreq/policy6/schedutil/up_rate_limit_us
-
-# Increase the minimum LITTLE cluster freq as a completely needed compensation, from a performance based point of view, for the altered big cluster maximum and minimum frequencies;
-echo "998400" > /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq
-
-# Reduce both the minimum as well as the maximum allowed frequencies on the big cluster for overall power saving reasons;
-echo "1747200" > /sys/devices/system/cpu/cpufreq/policy6/scaling_max_freq
-echo "300000" > /sys/devices/system/cpu/cpufreq/policy6/scaling_min_freq
-
 # Enable all of the "built-in" display panel power saving props;
 echo "Y" > /sys/kernel/debug/dsi_sofef00_sdc_1080p_cmd_display/dsi-phy-0_allow_phy_power_off
 echo "Y" > /sys/kernel/debug/dsi_sofef00_sdc_1080p_cmd_display/ulps_enable
@@ -93,11 +74,8 @@ echo "Y" > /sys/kernel/debug/dsi_sofef00_sdc_1080p_cmd_display/ulps_enable
 # Turn off some pretty useless kernel debugging;
 echo "N" > /sys/kernel/debug/debug_enabled
 
-# Disable Gentle_Fair_Sleepers for a UI responsivness boost;
+# Disable GENTLE_FAIR_SLEEPERS for a UI responsivness boost;
 echo "NO_GENTLE_FAIR_SLEEPERS" > /sys/kernel/debug/sched_features
-
-# Disable RT_Runtime_Share because the performance penalty that is being caused by the risk of the CPU (cores) being unable to service non-realtime based tasks, which is being strictly scheduled on a specific CPU core, is not even worth it at all;
-echo "NO_RT_RUNTIME_SHARE" > /sys/kernel/debug/sched_features
 
 # Use RCU_normal instead of RCU_expedited for improved real-time latency, CPU utilization and energy efficiency;
 echo "0" > /sys/kernel/rcu_expedited
@@ -133,9 +111,9 @@ echo "0" > /sys/module/rmnet_data/parameters/rmnet_data_log_level
 echo "0" > /sys/module/service_locator/parameters/enable
 echo "N" > /sys/module/sit/parameters/log_ecn_error
 echo "1" > /sys/module/subsystem_restart/parameters/disable_restart_work
-# echo "N" > /sys/module/sync/parameters/fsync_enabled
+echo "N" > /sys/module/sync/parameters/fsync_enabled
 echo "0" > /sys/module/usb_bam/parameters/enable_event_log
-echo "N" > /sys/module/workqueue/parameters/power_efficient
+echo "Y" > /sys/module/workqueue/parameters/power_efficient
 
 fstrim /data;
 fstrim /cache;
