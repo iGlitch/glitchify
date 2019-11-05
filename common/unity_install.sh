@@ -96,6 +96,7 @@ elif [ $device == "walleye" ] || [ $device == "taimen" ] ; then
 	rm -rf $TMPDIR/common/pixel2
     rm -rf $TMPDIR/common/pixel3
 	rm -rf $TMPDIR/common/pixel3a
+	rm -rf $TMPDIR/common/pixel4
 elif [ $device == "crosshatch" ] || [ $device == "blueline" ] ; then
     ui_print "You are using a Pixel 3, alright! Installing..."
     cat $TMPDIR/common/pixel3/bm.sh >> $TMPDIR/common/service.sh
@@ -103,13 +104,22 @@ elif [ $device == "crosshatch" ] || [ $device == "blueline" ] ; then
     rm -rf $TMPDIR/common/pixel2
     rm -rf $TMPDIR/common/pixel3
 	rm -rf $TMPDIR/common/pixel3a
+	rm -rf $TMPDIR/common/pixel4
 elif [ $device == "bonito" ] || [ $device == "sargo" ] ; then
     ui_print "You are using a Pixel 3a, alright! Installing..."
     cat $TMPDIR/common/pixel3a/bm.sh >> $TMPDIR/common/service.sh
     rm -rf $TMPDIR/common/pixel
     rm -rf $TMPDIR/common/pixel2
     rm -rf $TMPDIR/common/pixel3
-	rm -rf $TMPDIR/common/pixel3a	
+	rm -rf $TMPDIR/common/pixel3a
+	rm -rf $TMPDIR/common/pixel4
+elif [ $device == "flame" ] || [ $device == "coral" ] ; then
+    ui_print "You are using a Pixel 3a, alright! Installing..."
+    cat $TMPDIR/common/pixel3a/bm.sh >> $TMPDIR/common/service.sh
+    rm -rf $TMPDIR/common/pixel
+    rm -rf $TMPDIR/common/pixel2
+    rm -rf $TMPDIR/common/pixel3
+	rm -rf $TMPDIR/common/pixel4
 else
 	ui_print "You are not on a Google Pixel series device! Aborting, please do not try to cheat..."
 	exit

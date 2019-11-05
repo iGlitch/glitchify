@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.4-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Jul%2012%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.5-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Nov%2006%2C%202019-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -40,7 +40,7 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - One of the compatible devices from the compatibility list.
 
 ## Install
-- Flash the .zip from the Releases tab using Magisk Manager or TWRP.
+- Flash the .zip in MM.
 
 ## Device Compatibility
 ```
@@ -52,8 +52,15 @@ Google Pixel 3 (blueline)
 Google Pixel 3 XL (crosshatch)
 Google Pixel 3a (sargo)
 Google Pixel 3a XL (bonito)
+Google Pixel 4 (flame)
+Google Pixel 4 XL (coral)
+
 ```
 ## Changelog
+### v1.5 (2019/11/06)
+- Add support for Pixel 4
+- Updated Template
+
 ### v1.4 (2019/07/12)
 - Add support for Pixel 3a
 - Updated props from FDE

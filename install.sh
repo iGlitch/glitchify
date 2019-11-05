@@ -10,7 +10,6 @@ if [ -z $UF ]; then
   [ -f "$UF/util_functions.sh" ] || { ui_print "! Unable to extract zip file !"; exit 1; }
   . $UF/util_functions.sh
 fi
-
 comp_check
 
 REPLACE="
@@ -22,7 +21,7 @@ print_modname() {
 }
 
 set_permissions() {
-  : 
+  set_perm_recursive $MODPATH/service.sh 0 0 0755 0777 
 }
 
 unity_custom() {
