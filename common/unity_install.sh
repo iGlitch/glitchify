@@ -115,7 +115,7 @@ elif [ $device == "bonito" ] || [ $device == "sargo" ] ; then
 	rm -rf $TMPDIR/common/pixel4
 elif [ $device == "flame" ] || [ $device == "coral" ] ; then
     ui_print "You are using a Pixel 3a, alright! Installing..."
-    cat $TMPDIR/common/pixel3a/bm.sh >> $TMPDIR/common/service.sh
+    cat $TMPDIR/common/pixel4/bm.sh >> $TMPDIR/common/service.sh
     rm -rf $TMPDIR/common/pixel
     rm -rf $TMPDIR/common/pixel2
     rm -rf $TMPDIR/common/pixel3
