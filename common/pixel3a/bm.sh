@@ -1,6 +1,6 @@
 #!/system/bin/sh
 
-# BM 1.8
+# BM 2.0
 
 # Pause script execution a little for Magisk Boot Service;
 sleep 90;
