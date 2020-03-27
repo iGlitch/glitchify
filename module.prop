@@ -1,7 +1,7 @@
 id=glitchify
 name=Glitchify
-version=v1.5
-versionCode=15
+version=v1.6
+versionCode=16
 author=Glitch
 description=A super tuning script made for the Google Pixel series. Governor and kernel tweaks that aim to enhance power efficiency and while keeping performance.
 support=find me

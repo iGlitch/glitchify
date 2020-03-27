@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-<img src="https://img.shields.io/badge/Version-1.5-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Nov%2006%2C%202019-brightgreen.svg?style=flat-square"/>
+<img src="https://img.shields.io/badge/Version-1.6-lightgrey.svg?style=flat-square"/><img src="https://img.shields.io/badge/Updated-Mar%2028%2C%202020-brightgreen.svg?style=flat-square"/>
 </p>
 
 ## What is Glitchify ?
@@ -35,7 +35,7 @@ Glitchify is a tiny, yet powerful all-in-one tweakset that significantly increas
 - junk cleaner - removes cache, txt, logs from places they don't need to be every 60 hours. (fb messenger images may become blank)
 
 ## Requirements
-- [Magisk v18+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
+- [Magisk v19+](https://github.com/topjohnwu/Magisk/releases) or init.d support if you prefer to not use magisk
 - [Busybox](https://github.com/Magisk-Modules-Repo/busybox-ndk)
 - One of the compatible devices from the compatibility list.
 
@@ -57,6 +57,10 @@ Google Pixel 4 XL (coral)
 
 ```
 ## Changelog
+### v1.6 (2020/03/28) [quarantine boredom]
+- Update Pixel 4
+- Updated template MMT-Ex
+
 ### v1.5 (2019/11/06)
 - Add support for Pixel 4
 - Updated Template
@@ -94,7 +98,7 @@ Glitchify modifies things from the `kernel` level. **This is only tested on Goog
 **Glitch** - [iGlitch](https://github.com/iGlitch)
 
 Thanks goes to those wonderful people
-- [Unity template](https://github.com/Zackptg5/Unity)
+- [Unity template](https://github.com/Zackptg5/MMT-Extended)
 - [Magisk](https://github.com/topjohnwu/Magisk)
 - xFireFly93, gloeyisk, simonsmh, korom42, feravolt
 - Authors of kernels with schedutil additions.
